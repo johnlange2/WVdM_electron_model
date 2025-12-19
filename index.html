@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Williamson Van der Mark Electron Model Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #canvas-container canvas {
+            transform: translateX(-20vw); /* Shift canvas left to position model at ~1/3 from left edge */
+        }
+        
+        #title {
+            z-index: 10; /* Ensure title appears above canvas */
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            min-width: 280px;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        #controls h2 {
+            margin-bottom: 20px;
+            color: #89b4fa;
+            font-size: 1.2em;
+            border-bottom: 2px solid #89b4fa;
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 12px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cdd6f4;
+            font-size: 0.9em;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .control-group .value-display {
+            color: #89b4fa;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            background: rgba(49, 50, 68, 0.8);
+            border: 1px solid #45475a;
+            border-radius: 4px;
+            color: #cdd6f4;
+            font-size: 0.9em;
+        }
+        
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        #title h1 {
+            font-size: 1.5em;
+            color: #89b4fa;
+            margin-bottom: 5px;
+        }
+        
+        #title p {
+            font-size: 0.85em;
+            color: #a6adc8;
+        }
+        
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        #legend h3 {
+            margin-bottom: 10px;
+            color: #89b4fa;
+            font-size: 1em;
+            border-bottom: 1px solid #89b4fa;
+            padding-bottom: 5px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: #cdd6f4;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        button {
+            background: #89b4fa;
+            color: #1e1e2e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #74c7ec;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #89b4fa;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="title">
+            <h1>Williamson Van der Mark Electron/Positron Model</h1>
+            <p>Photon Motion on a Torus</p>
+        </div>
+        <div id="canvas-container"></div>
+        <div id="legend">
+            <h3>Field Vectors</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00ff00;"></div>
+                <span>Electric Field</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0088ff;"></div>
+                <span>Magnetic Field</span>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #45475a;">
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #cdd6f4; font-size: 0.85em;">Accumulated E: </span>
+                    <span id="accumulatedE" style="color: #00ff00; font-size: 0.85em;">(0.000, 0.000, 0.000)</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #cdd6f4; font-size: 0.85em;">Accumulated B: </span>
+                    <span id="accumulatedB" style="color: #0088ff; font-size: 0.85em;">(0.000, 0.000, 0.000)</span>
+                </div>
+                <button id="resetFields" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer;">Reset Fields</button>
+            </div>
+        </div>
+        
+        <div id="momentumDisplay" style="position: absolute; bottom: 20px; left: 320px; background: rgba(30, 30, 46, 0.9); padding: 15px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); min-width: 500px;">
+            <h3 style="margin-bottom: 10px; color: #89b4fa; font-size: 1em; border-bottom: 1px solid #89b4fa; padding-bottom: 5px;">Momentum Vectors</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; margin-bottom: 10px;">
+                <div>
+                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous Linear (model units):</div>
+                    <div id="instantLinearMomentum" style="color: #ffcc00; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous Angular (model units):</div>
+                    <div id="instantAngularMomentum" style="color: #ff8800; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Average Linear (model units):</div>
+                    <div id="avgLinearMomentum" style="color: #ffcc00; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Average Angular (model units):</div>
+                    <div id="avgAngularMomentum" style="color: #ff8800; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
+                </div>
+            </div>
+            <button id="resetMomentum" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer; margin-top: 10px;">Reset Momentum</button>
+        </div>
+        <div id="controls">
+            <h2>Controls</h2>
+            
+            <div style="margin-bottom: 12px;">
+                <button id="resetCamera">Reset Camera</button>
+                <button id="clearTrack">Reset Track</button>
+                <button id="pausePlay">Pause</button>
+            </div>
+            <div style="margin-bottom: 12px; display: flex; gap: 5px;">
+                <button id="setFineStructure">Set r/R to fine structure constant</button>
+                <button id="helpButton">Help</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Particle Type</label>
+                <select id="particleType" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+                    <option value="electron">Electron</option>
+                    <option value="positron">Positron</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Winding Ratio</label>
+                <select id="windingRatio" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+                    <option value="1:2" selected>1:2 (4π toroidal, 2π poloidal)</option>
+                    <option value="2:1">2:1 (2π toroidal, 4π poloidal)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Spin Direction</label>
+                <select id="spinDirection" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+                    <option value="-1" selected>Forward</option>
+                    <option value="1">Reverse</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Transparency</label>
+                <input type="range" id="transparency" min="0" max="1" step="0.01" value="0.5">
+                <span class="value-display" id="transparency-value">0.50</span>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="showWireframe" style="margin-right: 8px;">
+                    Show Wireframe
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>Inner Radius (relative)</label>
+                <input type="range" id="innerRadius" min="-2" max="5" step="0.01" value="1.5">
+                <span class="value-display" id="innerRadius-value">1.5</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Outer Radius (relative)</label>
+                <input type="range" id="outerRadius" min="1" max="30" step="0.1" value="3">
+                <span class="value-display" id="outerRadius-value">3.0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Photon Speed (Multiplier)</label>
+                <input type="range" id="photonSpeed" min="0" max="1" step="0.01" value="0.5">
+                <span class="value-display" id="photonSpeed-value">1.00</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Track Length (toroidal rotations)</label>
+                <input type="range" id="trailLength" min="0" max="1" step="0.01" value="0.5">
+                <span class="value-display" id="trailLength-value">1.00</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Precession (try values like 0.1)</label>
+                <input type="number" id="precession" step="0.001" value="0" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+            </div>
+            
+            <div class="control-group">
+                <label>Camera Distance (relative)</label>
+                <input type="range" id="cameraDistance" min="1" max="60" step="0.1" value="12">
+                <span class="value-display" id="cameraDistance-value">12.0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Camera Rotation X</label>
+                <input type="range" id="cameraRotationX" min="-10" max="10" step="0.01" value="1.57">
+                <span class="value-display" id="cameraRotationX-value">1.57</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Camera Rotation Y</label>
+                <input type="range" id="cameraRotationY" min="-10" max="10" step="0.01" value="1.57">
+                <span class="value-display" id="cameraRotationY-value">1.57</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div id="helpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; overflow-y: auto;">
+        <div style="position: relative; max-width: 800px; margin: 50px auto; background: rgba(30, 30, 46, 0.95); padding: 30px; border-radius: 10px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); color: #cdd6f4;">
+            <button id="closeHelp" style="position: absolute; top: 15px; right: 15px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 1.2em; width: 30px; height: 30px; cursor: pointer; line-height: 1;">×</button>
+            <h2 style="color: #89b4fa; margin-bottom: 20px; border-bottom: 2px solid #89b4fa; padding-bottom: 10px;">Williamson Van der Mark Electron/Positron Model - Help</h2>
+            
+            <div style="line-height: 1.6;">
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Overview</h3>
+                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along toroidal paths. The model shows how a photon's trajectory on a torus can give rise to particle-like properties.</p>
+                
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Controls</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Reset Camera:</strong> Resets camera position and rotation to default values</li>
+                    <li><strong>Reset Track:</strong> Clears the photon's track</li>
+                    <li><strong>Pause:</strong> Pauses/resumes the animation</li>
+                    <li><strong>Set r/R to fine structure constant:</strong> Sets inner radius, outer radius, and camera distance to values approximating the fine structure constant ratio (~1/137.036)</li>
+                </ul>
+                
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Parameters</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Transparency:</strong> Controls the opacity of the torus (0 = solid, 1 = invisible)</li>
+                    <li><strong>Show Wireframe:</strong> Toggles the wireframe mesh visibility</li>
+                    <li><strong>Inner Radius:</strong> Inner radius of the torus (can be 0 or negative for inverted shapes)</li>
+                    <li><strong>Outer Radius:</strong> Outer radius of the torus</li>
+                    <li><strong>Photon Speed:</strong> Controls the speed of the photon along its path (for visualization purposes)</li>
+                    <li><strong>Track Length:</strong> Length of the photon's track in toroidal rotations (1 = one full track). With precession, set to (1/precession) for full pattern (e.g., 10 for precession 0.1)</li>
+                    <li><strong>Precession:</strong> Adds a spirograph-like precession effect. Try values like 0.1 (pattern repeats after 10 cycles)</li>
+                    <li><strong>Particle Type:</strong> Select between Electron and Positron (affects electric field direction)</li>
+                    <li><strong>Winding Ratio:</strong> Select between 2:1 and 1:2 winding modes (different toroidal/poloidal path ratios)</li>
+                    <li><strong>Spin Direction:</strong> Select Forward (clockwise) or Reverse (counter-clockwise) direction of photon motion</li>
+                    <li><strong>Camera Distance:</strong> Distance of the camera from the origin</li>
+                    <li><strong>Camera Rotation X/Y:</strong> Rotation angles for the camera perspective</li>
+                </ul>
+                
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Visualization Elements</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Red/Blue Photon:</strong> The photon particle (red when visible, blue when behind the torus)</li>
+                    <li><strong>Green Arrow:</strong> Electric field vector (points inward for electrons, outward for positrons)</li>
+                    <li><strong>Blue Arrow:</strong> Magnetic field vector (perpendicular to motion and electric field)</li>
+                    <li><strong>Track:</strong> The photon's path, shown in brighter color when unobstructed, darker when behind the torus</li>
+                </ul>
+                
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Field and Momentum Displays</h3>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Accumulated Fields:</strong> Sum of electric and magnetic field vectors as the photon moves (can be reset)</li>
+                    <li><strong>Momentum Vectors:</strong> Instantaneous and average linear and angular momentum (in model units, normalized by torus size)</li>
+                </ul>
+                
+                <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Interaction</h3>
+                <p>You can rotate the view by clicking and dragging on the canvas. The visualization updates in real-time as you adjust parameters.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="visualization.js"></script>
+</body>
+</html>
+
