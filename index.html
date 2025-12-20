@@ -39,14 +39,14 @@
         
         #controls {
             position: absolute;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             background: rgba(30, 30, 46, 0.9);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             min-width: 280px;
-            max-height: 90vh;
+            max-height: calc(100vh - 40px);
             overflow-y: auto;
             backdrop-filter: blur(10px);
         }
@@ -180,7 +180,7 @@
     <div id="container">
         <div id="title">
             <h1>Williamson Van der Mark Electron/Positron Model</h1>
-            <p>Photon Motion on a Torus</p>
+            <p>Speculative Photon Motion on a Torus</p>
         </div>
         <div id="canvas-container"></div>
         <div id="legend">
@@ -206,26 +206,51 @@
             </div>
         </div>
         
-        <div id="momentumDisplay" style="position: absolute; bottom: 20px; left: 320px; background: rgba(30, 30, 46, 0.9); padding: 15px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); min-width: 500px;">
-            <h3 style="margin-bottom: 10px; color: #89b4fa; font-size: 1em; border-bottom: 1px solid #89b4fa; padding-bottom: 5px;">Momentum Vectors</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; margin-bottom: 10px;">
-                <div>
-                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous Linear (model units):</div>
-                    <div id="instantLinearMomentum" style="color: #ffcc00; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
-                </div>
-                <div>
-                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous Angular (model units):</div>
-                    <div id="instantAngularMomentum" style="color: #ff8800; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
-                </div>
-                <div>
-                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Average Linear (model units):</div>
-                    <div id="avgLinearMomentum" style="color: #ffcc00; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
-                </div>
-                <div>
-                    <div style="margin-bottom: 5px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Average Angular (model units):</div>
-                    <div id="avgAngularMomentum" style="color: #ff8800; font-size: 0.85em; margin-left: 10px;">(0.000, 0.000, 0.000)</div>
-                </div>
-            </div>
+        <div id="momentumDisplay" style="position: absolute; bottom: 20px; left: 290px; background: rgba(30, 30, 46, 0.9); padding: 15px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); min-width: 900px;">
+            <h3 style="margin-bottom: 10px; color: #89b4fa; font-size: 1em; border-bottom: 1px solid #89b4fa; padding-bottom: 5px;">Momentum Vectors (in model units)</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #45475a;">
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;"></th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Linear</th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Toroidal Angular</th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Poloidal Angular</th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Total Angular</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous</td>
+                        <td style="padding: 8px;">
+                            <div id="instantLinearMomentum" style="color: #ffcc00; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="instantToroidalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="instantPoloidalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="instantTotalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Avg, Last Cycle</td>
+                        <td style="padding: 8px;">
+                            <div id="avgLinearMomentum" style="color: #ffcc00; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="avgToroidalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="avgPoloidalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="avgTotalAngularMomentum" style="color: #ff8800; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
             <button id="resetMomentum" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer; margin-top: 10px;">Reset Momentum</button>
         </div>
         <div id="controls">
@@ -252,8 +277,8 @@
             <div class="control-group">
                 <label>Winding Ratio</label>
                 <select id="windingRatio" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
-                    <option value="1:2" selected>1:2 (4π toroidal, 2π poloidal)</option>
-                    <option value="2:1">2:1 (2π toroidal, 4π poloidal)</option>
+                    <option value="1:2" selected>1:2 (2π poloidal, 4π toroidal)</option>
+                    <option value="2:1">2:1 (4π poloidal, 2π toroidal)</option>
                 </select>
             </div>
             
@@ -266,7 +291,7 @@
             </div>
             
             <div class="control-group">
-                <label>Transparency</label>
+                <label>Transparency (0 = solid, 1 = clear)</label>
                 <input type="range" id="transparency" min="0" max="1" step="0.01" value="0.5">
                 <span class="value-display" id="transparency-value">0.50</span>
             </div>
@@ -314,13 +339,13 @@
             </div>
             
             <div class="control-group">
-                <label>Camera Rotation X</label>
+                <label>Camera Rotation X (radians)</label>
                 <input type="range" id="cameraRotationX" min="-10" max="10" step="0.01" value="1.57">
                 <span class="value-display" id="cameraRotationX-value">1.57</span>
             </div>
             
             <div class="control-group">
-                <label>Camera Rotation Y</label>
+                <label>Camera Rotation Y (radians)</label>
                 <input type="range" id="cameraRotationY" min="-10" max="10" step="0.01" value="1.57">
                 <span class="value-display" id="cameraRotationY-value">1.57</span>
             </div>

@@ -16,7 +16,7 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
 - **Interactive camera**: Real-time 3D perspective adjustment with mouse controls
 - **Field vectors**: Visual display of Electric (green) and Magnetic (blue) field vectors at the photon position
 - **Accumulated fields**: Running sum of electric and magnetic field vectors with reset capability
-- **Momentum vectors**: Display of instantaneous and average linear and angular momentum (in model units)
+- **Momentum vectors**: Display of instantaneous and average momentum vectors including linear, toroidal angular, poloidal angular, and total angular momentum (in model units, updated per cycle)
 - **Fine structure constant preset**: Quick button to set parameters approximating the fine structure constant ratio (~1/137.036)
 
 ## How to Use
@@ -50,15 +50,15 @@ Then open `http://localhost:8000` in your browser.
 - **Reset Camera**: Return camera to default position (distance and rotation)
 - **Clear Track**: Clear the photon's trail
 - **Pause/Play**: Pause or resume the photon animation
-- **Set r/R to fine structure constant**: Sets inner radius to 0.1, outer radius to 13.7, and camera distance to 60
+- **Set r/R to fine structure constant**: Sets inner radius to 0.1, outer radius to 13.7, and camera distance to 60 (clears track)
 
 #### Parameter Controls
 
 - **Particle Type**: Select between Electron and Positron (affects electric field direction)
 - **Winding Ratio**: 
-  - **1:2** (default): 4π toroidal, 2π poloidal
-  - **2:1**: 2π toroidal, 4π poloidal
-- **Spin Direction**: Forward (clockwise) or Reverse (counter-clockwise)
+  - **1:2** (default): 4π toroidal, 2π poloidal (clears track when changed)
+  - **2:1**: 2π toroidal, 4π poloidal (clears track when changed)
+- **Spin Direction**: Forward (clockwise) or Reverse (counter-clockwise) (clears track when changed)
 - **Transparency**: Adjust the opacity of the torus (0 = solid, 1 = invisible)
 - **Show Wireframe**: Toggle wireframe mesh visibility
 - **Inner Radius (relative)**: Control the inner radius of the torus (can be 0 or negative for inverted shapes)
@@ -70,9 +70,10 @@ Then open `http://localhost:8000` in your browser.
 - **Precession (try values like 0.1)**: Adds a spirograph-like precession effect
   - With precession 0.1, the pattern repeats after 10 rotations
   - Set trail length to (1/precession) to see the full repeating pattern
+  - Changing precession clears the track
 - **Camera Distance (relative)**: Zoom in/out (1.0 to 60.0)
-- **Camera Rotation X**: Rotate camera vertically (-3.14 to 3.14, default 1.57)
-- **Camera Rotation Y**: Rotate camera horizontally (-3.14 to 3.14, default 1.57)
+- **Camera Rotation X**: Rotate camera vertically (-10 to 10 radians, default 1.57)
+- **Camera Rotation Y**: Rotate camera horizontally (-10 to 10 radians, default 1.57)
 
 #### Mouse Controls
 
@@ -83,8 +84,11 @@ Then open `http://localhost:8000` in your browser.
 
 - **Field Vectors Legend** (bottom left): Shows accumulated Electric and Magnetic field vectors with reset button
 - **Momentum Vectors** (bottom left, next to Field Vectors): 
-  - Instantaneous and average linear momentum (yellow, model units)
-  - Instantaneous and average angular momentum (orange, model units)
+  - Table format with 4 columns: Linear | Toroidal Angular | Poloidal Angular | Total Angular
+  - Two rows: Instantaneous | Avg, Last Cycle
+  - All vectors displayed as |magnitude|: (x, y, z) format
+  - Linear momentum shown in yellow, angular momentum components in orange
+  - Averages update only when a complete cycle finishes (not continuously)
   - Reset button to clear accumulated values
 
 ## Technical Details
@@ -107,6 +111,14 @@ The trail length is specified in toroidal rotations:
 ### Momentum and Field Units
 
 All momentum and field values are displayed in "model units" (normalized by torus size) rather than physical units, since the model uses relative dimensions without absolute scale assumptions.
+
+### Momentum Calculation
+
+The momentum vectors are calculated by separating the photon's motion into toroidal and poloidal components:
+- **Toroidal momentum**: Component along the major radius direction (around the big circle)
+- **Poloidal momentum**: Component along the minor radius direction (around the tube)
+- **Angular momentum**: Calculated as L = r × p for each component (toroidal, poloidal, and total)
+- **Averaging**: Averages are computed over complete cycles and only update when a cycle completes, making them more stable and readable
 
 ## Model Description
 
@@ -138,7 +150,7 @@ Click the "Help" button in the Controls panel for detailed information about all
 
 MIT License
 
-Copyright (c) 2024
+Copyright (c) 2025
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

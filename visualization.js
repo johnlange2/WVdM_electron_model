@@ -159,10 +159,20 @@ function init() {
     let accumulatedElectricField = new THREE.Vector3(0, 0, 0);
     let accumulatedMagneticField = new THREE.Vector3(0, 0, 0);
     
-    // Momentum vectors
+    // Momentum vectors (for loop-based averaging)
     let accumulatedLinearMomentum = new THREE.Vector3(0, 0, 0);
-    let accumulatedAngularMomentum = new THREE.Vector3(0, 0, 0);
+    let accumulatedToroidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+    let accumulatedPoloidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+    let accumulatedTotalAngularMomentum = new THREE.Vector3(0, 0, 0);
     let momentumSampleCount = 0;
+    let lastToroidalAngle = 0; // Track toroidal angle to detect loop completion
+    let angleAtCycleStart = 0; // Track angle when current cycle started
+    
+    // Stored averages from last completed cycle (only updated when cycle completes)
+    let lastCompletedAvgLinearMomentum = new THREE.Vector3(0, 0, 0);
+    let lastCompletedAvgToroidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+    let lastCompletedAvgPoloidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+    let lastCompletedAvgTotalAngularMomentum = new THREE.Vector3(0, 0, 0);
     
     // Photon colors
     const photonColorVisible = 0xff6b6b; // Red when visible
@@ -458,11 +468,25 @@ function init() {
     });
 
     controls.precession.addEventListener('input', (e) => {
+        // Clear trail when changing precession to avoid confusion
+        trailPoints.length = 0;
+        trailColors.length = 0;
+        trailToroidalAngles.length = 0;
+        if (trailPoints.length > 1) {
+            trailGeometry.setFromPoints(trailPoints);
+        }
         precession = parseFloat(e.target.value) || 0;
     });
     
     controls.precession.addEventListener('change', (e) => {
         precession = parseFloat(e.target.value) || 0;
+        // Clear trail when changing precession to avoid confusion
+        trailPoints.length = 0;
+        trailColors.length = 0;
+        trailToroidalAngles.length = 0;
+        if (trailPoints.length > 1) {
+            trailGeometry.setFromPoints(trailPoints);
+        }
     });
 
     controls.cameraDistance.addEventListener('input', (e) => {
@@ -504,6 +528,14 @@ function init() {
     });
 
     controls.setFineStructure.addEventListener('click', () => {
+        // Clear trail when setting fine structure constant to avoid confusion
+        trailPoints.length = 0;
+        trailColors.length = 0;
+        trailToroidalAngles.length = 0;
+        if (trailPoints.length > 1) {
+            trailGeometry.setFromPoints(trailPoints);
+        }
+        
         // Set values for fine structure constant ratio (r/R ≈ 1/137.036)
         // Outer radius = 13.7, Inner radius = 0.1, Camera distance = 60
         innerRadius = 0.1;
@@ -531,10 +563,22 @@ function init() {
         accumulatedElectricField.set(0, 0, 0);
         accumulatedMagneticField.set(0, 0, 0);
         accumulatedLinearMomentum.set(0, 0, 0);
-        accumulatedAngularMomentum.set(0, 0, 0);
+        accumulatedToroidalAngularMomentum.set(0, 0, 0);
+        accumulatedPoloidalAngularMomentum.set(0, 0, 0);
+        accumulatedTotalAngularMomentum.set(0, 0, 0);
         momentumSampleCount = 0;
+        lastToroidalAngle = 0;
+        angleAtCycleStart = 0;
+        lastCompletedAvgLinearMomentum.set(0, 0, 0);
+        lastCompletedAvgToroidalAngularMomentum.set(0, 0, 0);
+        lastCompletedAvgPoloidalAngularMomentum.set(0, 0, 0);
+        lastCompletedAvgTotalAngularMomentum.set(0, 0, 0);
         updateAccumulatedFieldsDisplay();
         updateMomentumDisplay(
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
@@ -569,10 +613,22 @@ function init() {
         accumulatedElectricField.set(0, 0, 0);
         accumulatedMagneticField.set(0, 0, 0);
         accumulatedLinearMomentum.set(0, 0, 0);
-        accumulatedAngularMomentum.set(0, 0, 0);
+        accumulatedToroidalAngularMomentum.set(0, 0, 0);
+        accumulatedPoloidalAngularMomentum.set(0, 0, 0);
+        accumulatedTotalAngularMomentum.set(0, 0, 0);
         momentumSampleCount = 0;
+        lastToroidalAngle = 0;
+        angleAtCycleStart = 0;
+        lastCompletedAvgLinearMomentum.set(0, 0, 0);
+        lastCompletedAvgToroidalAngularMomentum.set(0, 0, 0);
+        lastCompletedAvgPoloidalAngularMomentum.set(0, 0, 0);
+        lastCompletedAvgTotalAngularMomentum.set(0, 0, 0);
         updateAccumulatedFieldsDisplay();
         updateMomentumDisplay(
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 0),
@@ -584,9 +640,20 @@ function init() {
     if (resetMomentumButton) {
         resetMomentumButton.addEventListener('click', () => {
             accumulatedLinearMomentum.set(0, 0, 0);
-            accumulatedAngularMomentum.set(0, 0, 0);
+            accumulatedToroidalAngularMomentum.set(0, 0, 0);
+            accumulatedPoloidalAngularMomentum.set(0, 0, 0);
+            accumulatedTotalAngularMomentum.set(0, 0, 0);
             momentumSampleCount = 0;
+            lastToroidalAngle = 0;
+            lastCompletedAvgLinearMomentum.set(0, 0, 0);
+            lastCompletedAvgToroidalAngularMomentum.set(0, 0, 0);
+            lastCompletedAvgPoloidalAngularMomentum.set(0, 0, 0);
+            lastCompletedAvgTotalAngularMomentum.set(0, 0, 0);
             updateMomentumDisplay(
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 0),
                 new THREE.Vector3(0, 0, 0),
                 new THREE.Vector3(0, 0, 0),
                 new THREE.Vector3(0, 0, 0),
@@ -667,7 +734,7 @@ function init() {
         controls.cameraDistance.value = cameraDistance;
         updateValueDisplay('cameraDistance', cameraDistance);
         updateCamera();
-    });
+    }, { passive: false }); // Explicitly non-passive since we call preventDefault()
 
     // Check if photon is obstructed by torus
     function isPhotonObstructed(photonPos) {
@@ -791,23 +858,81 @@ function init() {
     }
 
     // Calculate momentum vectors (in normalized model units)
+    // Based on torus parameterization: r(φ,θ) = ((R+r cos θ) cos φ, (R+r cos θ) sin φ, r sin θ)
     function calculateMomentum(position, majorRadius, minorRadius) {
-        // Calculate velocity
-        const velocity = calculateVelocity(position, majorRadius, minorRadius);
+        // Get current φ and θ from animation time
+        let uToroidal, vPoloidal;
+        if (windingRatio === '1:2') {
+            uToroidal = 4 * Math.PI;
+            vPoloidal = 2 * Math.PI;
+        } else {
+            uToroidal = 2 * Math.PI;
+            vPoloidal = 4 * Math.PI;
+        }
+        const u = animationTime * uToroidal * (1 + precession) * spinDirection;
+        const v = animationTime * vPoloidal * (1 + precession * 2) * spinDirection;
+        
+        // Calculate tangent vectors
+        // r_φ = ∂r/∂φ = (-(R+r cos θ) sin φ, (R+r cos θ) cos φ, 0)
+        const r_phi = new THREE.Vector3(
+            -(majorRadius + minorRadius * Math.cos(v)) * Math.sin(u),
+            (majorRadius + minorRadius * Math.cos(v)) * Math.cos(u),
+            0
+        );
+        
+        // r_θ = ∂r/∂θ = (-r sin θ cos φ, -r sin θ sin φ, r cos θ)
+        const r_theta = new THREE.Vector3(
+            -minorRadius * Math.sin(v) * Math.cos(u),
+            -minorRadius * Math.sin(v) * Math.sin(u),
+            minorRadius * Math.cos(v)
+        );
+        
+        // Time derivatives (angular velocities)
+        // For 1:2 winding: φ̇ = 1, θ̇ = 0.5
+        // For 2:1 winding: φ̇ = 1, θ̇ = 2
+        let phi_dot, theta_dot;
+        if (windingRatio === '1:2') {
+            phi_dot = 1.0 * (1 + precession) * spinDirection;
+            theta_dot = 0.5 * (1 + precession * 2) * spinDirection;
+        } else {
+            phi_dot = 1.0 * (1 + precession) * spinDirection;
+            theta_dot = 2.0 * (1 + precession * 2) * spinDirection;
+        }
+        
+        // Velocities in model units
+        const v_tor = r_phi.clone().multiplyScalar(phi_dot);
+        const v_pol = r_theta.clone().multiplyScalar(theta_dot);
         
         // Normalize by major radius to make values dimensionless/model units
-        // This makes the momentum values scale-invariant and relative to the torus size
         const normalizationFactor = 1.0 / Math.max(0.1, majorRadius);
         
-        // Linear momentum: normalized velocity vector
-        const linearMomentum = velocity.clone().multiplyScalar(normalizationFactor);
+        // Momentum components (using actual magnitudes from velocities)
+        // p_tor = v_tor * normalization, p_pol = v_pol * normalization
+        const p_tor = v_tor.clone().multiplyScalar(normalizationFactor);
+        const p_pol = v_pol.clone().multiplyScalar(normalizationFactor);
         
-        // Angular momentum L = r × p (cross product of position and momentum)
-        // Normalize position and momentum by major radius for dimensionless result
+        // Total linear momentum
+        const linearMomentum = p_tor.clone().add(p_pol);
+        
+        // Angular momentum components: L = r × p
+        // Normalize position for dimensionless result
         const normalizedPosition = position.clone().multiplyScalar(normalizationFactor);
-        const angularMomentum = new THREE.Vector3().crossVectors(normalizedPosition, linearMomentum);
         
-        return { linearMomentum, angularMomentum };
+        // L_tor = r × p_tor
+        const L_tor = new THREE.Vector3().crossVectors(normalizedPosition, p_tor);
+        
+        // L_pol = r × p_pol
+        const L_pol = new THREE.Vector3().crossVectors(normalizedPosition, p_pol);
+        
+        // L_tot = L_tor + L_pol
+        const L_tot = L_tor.clone().add(L_pol);
+        
+        return { 
+            linearMomentum, 
+            toroidalAngularMomentum: L_tor, 
+            poloidalAngularMomentum: L_pol, 
+            totalAngularMomentum: L_tot 
+        };
     }
 
     // Format number in scientific notation if needed
@@ -821,24 +946,55 @@ function init() {
         }
     }
     
+    // Format vector as |magnitude|: (x, y, z)
+    function formatVector(vec) {
+        const magnitude = vec.length();
+        return `|${formatScientific(magnitude)}|: (${formatScientific(vec.x)}, ${formatScientific(vec.y)}, ${formatScientific(vec.z)})`;
+    }
+    
     // Update momentum display
-    function updateMomentumDisplay(instantLinear, instantAngular, avgLinear, avgAngular) {
+    function updateMomentumDisplay(
+        instantLinear, 
+        instantToroidalAngular, 
+        instantPoloidalAngular, 
+        instantTotalAngular,
+        avgLinear, 
+        avgToroidalAngular, 
+        avgPoloidalAngular, 
+        avgTotalAngular
+    ) {
         const instantLinearDisplay = document.getElementById('instantLinearMomentum');
-        const instantAngularDisplay = document.getElementById('instantAngularMomentum');
+        const instantToroidalDisplay = document.getElementById('instantToroidalAngularMomentum');
+        const instantPoloidalDisplay = document.getElementById('instantPoloidalAngularMomentum');
+        const instantTotalDisplay = document.getElementById('instantTotalAngularMomentum');
         const avgLinearDisplay = document.getElementById('avgLinearMomentum');
-        const avgAngularDisplay = document.getElementById('avgAngularMomentum');
+        const avgToroidalDisplay = document.getElementById('avgToroidalAngularMomentum');
+        const avgPoloidalDisplay = document.getElementById('avgPoloidalAngularMomentum');
+        const avgTotalDisplay = document.getElementById('avgTotalAngularMomentum');
         
-        if (instantLinearDisplay) {
-            instantLinearDisplay.textContent = `(${formatScientific(instantLinear.x)}, ${formatScientific(instantLinear.y)}, ${formatScientific(instantLinear.z)})`;
+        if (instantLinearDisplay && instantLinear) {
+            instantLinearDisplay.textContent = formatVector(instantLinear);
         }
-        if (instantAngularDisplay) {
-            instantAngularDisplay.textContent = `(${formatScientific(instantAngular.x)}, ${formatScientific(instantAngular.y)}, ${formatScientific(instantAngular.z)})`;
+        if (instantToroidalDisplay && instantToroidalAngular) {
+            instantToroidalDisplay.textContent = formatVector(instantToroidalAngular);
         }
-        if (avgLinearDisplay) {
-            avgLinearDisplay.textContent = `(${formatScientific(avgLinear.x)}, ${formatScientific(avgLinear.y)}, ${formatScientific(avgLinear.z)})`;
+        if (instantPoloidalDisplay && instantPoloidalAngular) {
+            instantPoloidalDisplay.textContent = formatVector(instantPoloidalAngular);
         }
-        if (avgAngularDisplay) {
-            avgAngularDisplay.textContent = `(${formatScientific(avgAngular.x)}, ${formatScientific(avgAngular.y)}, ${formatScientific(avgAngular.z)})`;
+        if (instantTotalDisplay && instantTotalAngular) {
+            instantTotalDisplay.textContent = formatVector(instantTotalAngular);
+        }
+        if (avgLinearDisplay && avgLinear) {
+            avgLinearDisplay.textContent = formatVector(avgLinear);
+        }
+        if (avgToroidalDisplay && avgToroidalAngular) {
+            avgToroidalDisplay.textContent = formatVector(avgToroidalAngular);
+        }
+        if (avgPoloidalDisplay && avgPoloidalAngular) {
+            avgPoloidalDisplay.textContent = formatVector(avgPoloidalAngular);
+        }
+        if (avgTotalDisplay && avgTotalAngular) {
+            avgTotalDisplay.textContent = formatVector(avgTotalAngular);
         }
     }
 
@@ -888,22 +1044,76 @@ function init() {
             accumulatedMagneticField.add(magneticField.clone().multiplyScalar(accumulationFactor));
             
             // Calculate momentum vectors
-            const { linearMomentum, angularMomentum } = calculateMomentum(position, majorRadius, minorRadius);
+            const { linearMomentum, toroidalAngularMomentum, poloidalAngularMomentum, totalAngularMomentum } = calculateMomentum(position, majorRadius, minorRadius);
             
-            // Accumulate momentum for averages
+            // Determine toroidal angle per rotation based on winding ratio (for loop detection)
+            let uToroidalPerRotationLoop;
+            if (windingRatio === '1:2') {
+                uToroidalPerRotationLoop = 4 * Math.PI; // 1:2 winding: 4π toroidal per rotation
+            } else {
+                uToroidalPerRotationLoop = 2 * Math.PI; // 2:1 winding: 2π toroidal per rotation
+            }
+            
+            // Calculate current toroidal angle (base angle without precession for loop detection)
+            const currentToroidalAngleLoop = animationTime * uToroidalPerRotationLoop * spinDirection;
+            
+            // Initialize angleAtCycleStart on first frame if needed
+            if (momentumSampleCount === 0 && angleAtCycleStart === 0 && currentToroidalAngleLoop !== 0) {
+                angleAtCycleStart = currentToroidalAngleLoop;
+            }
+            
+            // Detect loop completion: when toroidal angle wraps (crosses a full rotation boundary)
+            // Account for precession: full loop = uToroidalPerRotationLoop * (1 + precession)
+            const fullLoopAngle = uToroidalPerRotationLoop * (1 + precession);
+            
+            // Calculate total angle traveled since cycle start
+            const angleTraveled = Math.abs(currentToroidalAngleLoop - angleAtCycleStart);
+            
+            // Detect loop completion: when we've traveled a full loop's worth of angle
+            const loopJustCompleted = angleTraveled >= fullLoopAngle;
+            
+            if (loopJustCompleted) {
+                // Cycle just completed - calculate and store the averages from the completed cycle
+                if (momentumSampleCount > 0) {
+                    lastCompletedAvgLinearMomentum = accumulatedLinearMomentum.clone().divideScalar(momentumSampleCount);
+                    lastCompletedAvgToroidalAngularMomentum = accumulatedToroidalAngularMomentum.clone().divideScalar(momentumSampleCount);
+                    lastCompletedAvgPoloidalAngularMomentum = accumulatedPoloidalAngularMomentum.clone().divideScalar(momentumSampleCount);
+                    lastCompletedAvgTotalAngularMomentum = accumulatedTotalAngularMomentum.clone().divideScalar(momentumSampleCount);
+                }
+                
+                // Reset accumulation for the new cycle
+                accumulatedLinearMomentum.set(0, 0, 0);
+                accumulatedToroidalAngularMomentum.set(0, 0, 0);
+                accumulatedPoloidalAngularMomentum.set(0, 0, 0);
+                accumulatedTotalAngularMomentum.set(0, 0, 0);
+                momentumSampleCount = 0;
+                angleAtCycleStart = currentToroidalAngleLoop; // Start tracking from current angle
+            }
+            
+            lastToroidalAngle = currentToroidalAngleLoop;
+            
+            // Accumulate momentum for the current cycle
             accumulatedLinearMomentum.add(linearMomentum.clone());
-            accumulatedAngularMomentum.add(angularMomentum.clone());
+            accumulatedToroidalAngularMomentum.add(toroidalAngularMomentum.clone());
+            accumulatedPoloidalAngularMomentum.add(poloidalAngularMomentum.clone());
+            accumulatedTotalAngularMomentum.add(totalAngularMomentum.clone());
             momentumSampleCount++;
             
-            // Calculate averages
-            const avgLinearMomentum = accumulatedLinearMomentum.clone().divideScalar(momentumSampleCount);
-            const avgAngularMomentum = accumulatedAngularMomentum.clone().divideScalar(momentumSampleCount);
-            
             // Update display at consistent intervals (twice per second)
+            // Use stored averages from last completed cycle (only updates when cycle completes)
             const currentTime = Date.now();
             if (currentTime - lastDisplayUpdateTime >= displayUpdateInterval) {
                 updateAccumulatedFieldsDisplay();
-                updateMomentumDisplay(linearMomentum, angularMomentum, avgLinearMomentum, avgAngularMomentum);
+                updateMomentumDisplay(
+                    linearMomentum, 
+                    toroidalAngularMomentum, 
+                    poloidalAngularMomentum, 
+                    totalAngularMomentum,
+                    lastCompletedAvgLinearMomentum, 
+                    lastCompletedAvgToroidalAngularMomentum, 
+                    lastCompletedAvgPoloidalAngularMomentum, 
+                    lastCompletedAvgTotalAngularMomentum
+                );
                 lastDisplayUpdateTime = currentTime;
             }
             
@@ -975,6 +1185,10 @@ function init() {
             // Remove old points when toroidal angle span exceeds maxToroidalAngle
             // currentToroidalAngle is a continuous, unbounded value that increases with time
             // So we can simply calculate the absolute difference
+            // Also limit maximum trail points to prevent performance issues (even when unlimited)
+            const maxTrailPoints = 5000; // Maximum points to prevent performance degradation
+            let trailChanged = false;
+            
             if (trailLengthRotations < 100 && trailToroidalAngles.length > 1) {
                 while (trailToroidalAngles.length > 1) {
                     const oldestAngle = trailToroidalAngles[0];
@@ -990,10 +1204,25 @@ function init() {
                     trailColors.shift();
                     trailOriginalIndices.shift();
                     trailToroidalAngles.shift();
+                    trailChanged = true;
                 }
             }
             
-            if (trailPoints.length > 1) {
+            // Limit trail points even when "unlimited" to prevent performance issues
+            if (trailPoints.length > maxTrailPoints) {
+                const removeCount = trailPoints.length - maxTrailPoints;
+                trailPoints.splice(0, removeCount);
+                trailColors.splice(0, removeCount);
+                trailOriginalIndices.splice(0, removeCount);
+                trailToroidalAngles.splice(0, removeCount);
+                trailChanged = true;
+            }
+            
+            // Only update trail geometry when points change or periodically (not every frame)
+            // Throttle updates to every 2-3 frames for better performance
+            const shouldUpdateTrail = trailChanged || (Math.floor(animationTime * 60) % 3 === 0);
+            
+            if (trailPoints.length > 1 && shouldUpdateTrail) {
                 // When transparency = 0, filter out obstructed points and create separate line segments
                 let pointsToRender = trailPoints;
                 let colorsToRender = trailColors;
@@ -1001,16 +1230,18 @@ function init() {
                 
                 if (transparency === 0) {
                     // At transparency = 0, show all points but use dark color for obstructed segments
-                    // Recalculate obstruction for all points (camera may have moved)
+                    // Throttle obstruction recalculation - only check every Nth point to reduce raycasting
                     const updatedColors = [];
+                    const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300)); // Check at most 300 points
+                    let lastColor = new THREE.Color(0xff8888);
+                    
                     for (let i = 0; i < trailPoints.length; i++) {
-                        const isObstructed = isPhotonObstructed(trailPoints[i]);
-                        if (isObstructed) {
-                            // Use very dark color for obstructed segments at transparency = 0
-                            updatedColors.push(new THREE.Color(0x000000)); // Black (essentially invisible but still rendered)
-                        } else {
-                            updatedColors.push(new THREE.Color(0xff8888)); // Bright red-orange for unobstructed
+                        if (i % checkInterval === 0 || i === trailPoints.length - 1) {
+                            // Recalculate obstruction for sampled points
+                            const isObstructed = isPhotonObstructed(trailPoints[i]);
+                            lastColor = isObstructed ? new THREE.Color(0x000000) : new THREE.Color(0xff8888);
                         }
+                        updatedColors.push(lastColor.clone());
                     }
                     
                     pointsToRender = trailPoints;
@@ -1042,7 +1273,6 @@ function init() {
                     // Not enough points, clear geometry
                     trailGeometry.setFromPoints([]);
                 }
-                
             }
             
             // Rotate photon for visual effect
@@ -1068,7 +1298,8 @@ function init() {
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0)
+        new THREE.Vector3(0, 0, 0),
+        0, 0
     ); // Initialize momentum display
     
     // Help modal functionality
@@ -1130,3 +1361,4 @@ function init() {
 
 // Start initialization
 init();
+
