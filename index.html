@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            background: #0a0a0f; /* Match scene background color */
             color: #e0e0e0;
             overflow: hidden;
         }
@@ -27,14 +27,35 @@
         #canvas-container {
             width: 100%;
             height: 100%;
+            overflow: hidden; /* Ensure canvas doesn't create scrollbars */
         }
         
-        #canvas-container canvas {
-            transform: translateX(-20vw); /* Shift canvas left to position model at ~1/3 from left edge */
-        }
         
         #title {
             z-index: 10; /* Ensure title appears above canvas */
+        }
+        
+        #controlsToggle {
+            position: absolute;
+            top: 20px;
+            right: 60px;
+            background: rgba(30, 30, 46, 0.9);
+            padding: 10px 20px;
+            border: 2px solid #89b4fa;
+            border-radius: 10px;
+            color: #89b4fa;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        #controlsToggle:hover {
+            background: rgba(49, 50, 68, 0.95);
+            transform: scale(1.05);
         }
         
         #controls {
@@ -49,6 +70,12 @@
             max-height: calc(100vh - 40px);
             overflow-y: auto;
             backdrop-filter: blur(10px);
+            display: none; /* Hidden by default */
+            z-index: 999;
+        }
+        
+        #controls.visible {
+            display: block;
         }
         
         #controls h2 {
@@ -115,7 +142,7 @@
         
         #legend {
             position: absolute;
-            bottom: 20px;
+            bottom: 260px;
             left: 20px;
             background: rgba(30, 30, 46, 0.9);
             padding: 15px 20px;
@@ -180,33 +207,44 @@
     <div id="container">
         <div id="title">
             <h1>Williamson Van der Mark Electron/Positron Model</h1>
-            <p>Speculative Photon Motion on a Torus</p>
+            <p>Speculative WVdM Photon Motion on a Torus, and Lemniscate Extensions</p>
         </div>
         <div id="canvas-container"></div>
         <div id="legend">
-            <h3>Field Vectors</h3>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #00ff00;"></div>
-                <span>Electric Field</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #0088ff;"></div>
-                <span>Magnetic Field</span>
-            </div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #45475a;">
-                <div style="margin-bottom: 8px;">
-                    <span style="color: #cdd6f4; font-size: 0.85em;">Accumulated E: </span>
-                    <span id="accumulatedE" style="color: #00ff00; font-size: 0.85em;">(0.000, 0.000, 0.000)</span>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <span style="color: #cdd6f4; font-size: 0.85em;">Accumulated B: </span>
-                    <span id="accumulatedB" style="color: #0088ff; font-size: 0.85em;">(0.000, 0.000, 0.000)</span>
-                </div>
-                <button id="resetFields" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer;">Reset Fields</button>
-            </div>
+            <h3 style="margin-bottom: 10px; color: #89b4fa; font-size: 1em; border-bottom: 1px solid #89b4fa; padding-bottom: 5px;">Field Vectors (in model units)</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #45475a;">
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;"></th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Electric Field</th>
+                        <th style="padding: 8px; text-align: left; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Magnetic Field</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Instantaneous</td>
+                        <td style="padding: 8px;">
+                            <div id="instantElectricField" style="color: #00ff00; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="instantMagneticField" style="color: #0088ff; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; color: #cdd6f4; font-size: 0.85em; font-weight: bold;">Avg. Last Cycle</td>
+                        <td style="padding: 8px;">
+                            <div id="avgElectricField" style="color: #00ff00; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                        <td style="padding: 8px;">
+                            <div id="avgMagneticField" style="color: #0088ff; font-size: 0.85em;">|0.000|: (0.000, 0.000, 0.000)</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button id="resetFields" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer; margin-top: 10px;">Reset Fields</button>
         </div>
         
-        <div id="momentumDisplay" style="position: absolute; bottom: 20px; left: 290px; background: rgba(30, 30, 46, 0.9); padding: 15px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); min-width: 900px;">
+        <div id="momentumDisplay" style="position: absolute; bottom: 20px; left: 20px; background: rgba(30, 30, 46, 0.9); padding: 15px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); min-width: 900px;">
             <h3 style="margin-bottom: 10px; color: #89b4fa; font-size: 1em; border-bottom: 1px solid #89b4fa; padding-bottom: 5px;">Momentum Vectors (in model units)</h3>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                 <thead>
@@ -253,6 +291,7 @@
             </table>
             <button id="resetMomentum" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.85em; cursor: pointer; margin-top: 10px;">Reset Momentum</button>
         </div>
+        <button id="controlsToggle">☰ Controls</button>
         <div id="controls">
             <h2>Controls</h2>
             
@@ -267,6 +306,15 @@
             </div>
             
             <div class="control-group">
+                <label>Path Mode</label>
+                <select id="pathMode" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+                    <option value="torus" selected>Torus (Donut), Original WVdM Model</option>
+                    <option value="lemniscate-c">Viviani Lemniscate (Figure-8), 'C' Curve</option>
+                    <option value="lemniscate-s">Viviani Lemniscate (Figure-8), 'S' Curve</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
                 <label>Particle Type</label>
                 <select id="particleType" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
                     <option value="electron">Electron</option>
@@ -274,7 +322,7 @@
                 </select>
             </div>
             
-            <div class="control-group">
+            <div class="control-group" id="windingRatioGroup">
                 <label>Winding Ratio</label>
                 <select id="windingRatio" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
                     <option value="1:2" selected>1:2 (2π poloidal, 4π toroidal)</option>
@@ -300,17 +348,26 @@
                 <label>
                     <input type="checkbox" id="showWireframe" style="margin-right: 8px;">
                     Show Wireframe
+                    <input type="checkbox" id="showAxes" style="margin-left: 15px; margin-right: 8px;">
+                    Show Axes
                 </label>
             </div>
             
             <div class="control-group">
-                <label>Inner Radius (relative)</label>
+                <label>
+                    <input type="checkbox" id="showFieldAndMomentumVectors" style="margin-right: 8px;" checked>
+                    Show Field and Momentum Vectors
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label id="innerRadiusLabel">Inner Radius (relative)</label>
                 <input type="range" id="innerRadius" min="-2" max="5" step="0.01" value="1.5">
                 <span class="value-display" id="innerRadius-value">1.5</span>
             </div>
             
             <div class="control-group">
-                <label>Outer Radius (relative)</label>
+                <label id="outerRadiusLabel">Outer Radius (relative)</label>
                 <input type="range" id="outerRadius" min="1" max="30" step="0.1" value="3">
                 <span class="value-display" id="outerRadius-value">3.0</span>
             </div>
@@ -328,7 +385,7 @@
             </div>
             
             <div class="control-group">
-                <label>Precession (try values like 0.1)</label>
+                <label>Precession (try values <= 0.5, i.e. 0.1; 0=None)</label>
                 <input type="number" id="precession" step="0.001" value="0" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
             </div>
             
@@ -360,44 +417,99 @@
             
             <div style="line-height: 1.6;">
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Overview</h3>
-                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along toroidal paths. The model shows how a photon's trajectory on a torus can give rise to particle-like properties.</p>
+                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along closed paths. The model supports three path geometries: a torus (donut), and two lemniscate (figure-8) curves based on Viviani's curve. The model shows how a photon's trajectory can give rise to particle-like properties.</p>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Controls</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
                     <li><strong>Reset Camera:</strong> Resets camera position and rotation to default values</li>
                     <li><strong>Reset Track:</strong> Clears the photon's track</li>
                     <li><strong>Pause:</strong> Pauses/resumes the animation</li>
-                    <li><strong>Set r/R to fine structure constant:</strong> Sets inner radius, outer radius, and camera distance to values approximating the fine structure constant ratio (~1/137.036)</li>
+                    <li><strong>Set r/R to fine structure constant</strong> / <strong>Set major and minor axes to 1:</strong> 
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus mode:</strong> Sets inner radius to 0.1, outer radius to 13.7, and camera distance to 60</li>
+                            <li><strong>Lemniscate modes:</strong> Sets major and minor axes to 1.0, and camera distance to 4.0</li>
+                        </ul>
+                        Button text changes automatically based on selected path mode.</li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Parameters</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
-                    <li><strong>Transparency:</strong> Controls the opacity of the torus (0 = solid, 1 = invisible)</li>
-                    <li><strong>Show Wireframe:</strong> Toggles the wireframe mesh visibility</li>
-                    <li><strong>Inner Radius:</strong> Inner radius of the torus (can be 0 or negative for inverted shapes)</li>
-                    <li><strong>Outer Radius:</strong> Outer radius of the torus</li>
-                    <li><strong>Photon Speed:</strong> Controls the speed of the photon along its path (for visualization purposes)</li>
-                    <li><strong>Track Length:</strong> Length of the photon's track in toroidal rotations (1 = one full track). With precession, set to (1/precession) for full pattern (e.g., 10 for precession 0.1)</li>
-                    <li><strong>Precession:</strong> Adds a spirograph-like precession effect. Try values like 0.1 (pattern repeats after 10 cycles)</li>
+                    <li><strong>Path Mode:</strong> Select between three path geometries:
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus (Donut):</strong> Original WVdM style helix on a torus surface</li>
+                            <li><strong>Viviani Lemniscate 'C' curve:</strong> Single spheroid with figure-8 path, precessed in 3D with rotating E/M fields</li>
+                            <li><strong>Viviani Lemniscate 'S' curve:</strong> Two side-by-side spheroids with alternating left/right tracks that meet at a touchpoint</li>
+                        </ul>
+                        Changing path mode clears the track.</li>
                     <li><strong>Particle Type:</strong> Select between Electron and Positron (affects electric field direction)</li>
-                    <li><strong>Winding Ratio:</strong> Select between 2:1 and 1:2 winding modes (different toroidal/poloidal path ratios)</li>
-                    <li><strong>Spin Direction:</strong> Select Forward (clockwise) or Reverse (counter-clockwise) direction of photon motion</li>
-                    <li><strong>Camera Distance:</strong> Distance of the camera from the origin</li>
-                    <li><strong>Camera Rotation X/Y:</strong> Rotation angles for the camera perspective</li>
+                    <li><strong>Winding Ratio:</strong> (Torus mode only) Select between 1:2 (default) and 2:1 winding modes (different toroidal/poloidal path ratios). Changing winding ratio clears the track.</li>
+                    <li><strong>Spin Direction:</strong> Select Forward (clockwise) or Reverse (counter-clockwise) direction of photon motion. Changing spin direction clears the track.</li>
+                    <li><strong>Transparency:</strong> Controls the opacity of the torus/spheroids (0 = solid, 1 = invisible). Wireframe option available in torus mode only.</li>
+                    <li><strong>Show Wireframe:</strong> Toggles the wireframe mesh visibility (torus mode only)</li>
+                    <li><strong>Inner Radius (relative)</strong> / <strong>Minor Axis (relative):</strong> 
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus mode:</strong> Inner radius (can be 0 or negative for inverted shapes)</li>
+                            <li><strong>Lemniscate modes:</strong> Minor axis (must be > 0, can be greater than major axis for oblate spheroids)</li>
+                        </ul>
+                        Label changes automatically based on selected path mode.</li>
+                    <li><strong>Outer Radius (relative)</strong> / <strong>Major Axis (relative):</strong> 
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus mode:</strong> Outer radius</li>
+                            <li><strong>Lemniscate modes:</strong> Major axis (can be less than minor axis for oblate spheroids)</li>
+                        </ul>
+                        Label changes automatically based on selected path mode.</li>
+                    <li><strong>Photon Speed (Multiplier):</strong> Logarithmic scale from 0.1 (left) to 1.0 (middle) to 10.0 (right). Controls the animation rate for visualization purposes, not the actual speed of light.</li>
+                    <li><strong>Trail Length (toroidal rotations):</strong> Length of the photon's trail in rotations (1 = one full track). Logarithmic scale from 0.1 to 100 (unlimited). With precession, set to (1/precession) to see the full repeating pattern (e.g., 10 for precession 0.1).</li>
+                    <li><strong>Precession (try values <= 0.5, e.g. 0.1):</strong> Adds a spirograph-like precession effect:
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>C curve:</strong> Rotating E/M fields create continuous spirograph patterns</li>
+                            <li><strong>S curve:</strong> Both left and right loops rotate independently around Y-axis</li>
+                            <li>Examples: p=0.5 → 2 interleaved loops (180° apart), p=0.25 → 4 loops (90° apart), p=0.125 → 8 loops (45° apart)</li>
+                            <li>Pattern closes after total length L = 4π/p</li>
+                        </ul>
+                        Changing precession clears the track.</li>
+                    <li><strong>Camera Distance (relative):</strong> Zoom in/out (1.0 to 60.0)</li>
+                    <li><strong>Camera Rotation X/Y:</strong> Rotation angles for the camera perspective (-10 to 10 radians, default 1.57)</li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Visualization Elements</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
-                    <li><strong>Red/Blue Photon:</strong> The photon particle (red when visible, blue when behind the torus)</li>
-                    <li><strong>Green Arrow:</strong> Electric field vector (points inward for electrons, outward for positrons)</li>
-                    <li><strong>Blue Arrow:</strong> Magnetic field vector (perpendicular to motion and electric field)</li>
-                    <li><strong>Track:</strong> The photon's path, shown in brighter color when unobstructed, darker when behind the torus</li>
+                    <li><strong>Red/Blue Photon:</strong> The photon particle (red when visible, blue when behind geometry in torus mode)</li>
+                    <li><strong>Green Arrow:</strong> Electric field vector
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus/C curve:</strong> Points radially (inward for electrons, outward for positrons)</li>
+                            <li><strong>S curve:</strong> Points inward toward the current spheroid's center (left or right)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Blue Arrow:</strong> Magnetic field vector (perpendicular to motion and electric field, forming a right-handed triad)</li>
+                    <li><strong>Track:</strong> The photon's path
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Torus/C curve:</strong> Single continuous track</li>
+                            <li><strong>S curve:</strong> Two alternating tracks (left visible when u ∈ [2π, 4π], right visible when u ∈ [0, 2π])</li>
+                        </ul>
+                        Shown in brighter color when unobstructed, darker when behind geometry (torus mode).</li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Field and Momentum Displays</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
-                    <li><strong>Accumulated Fields:</strong> Sum of electric and magnetic field vectors as the photon moves (can be reset)</li>
-                    <li><strong>Momentum Vectors:</strong> Instantaneous and average linear and angular momentum (in model units, normalized by torus size)</li>
+                    <li><strong>Field Vectors:</strong> Displays instantaneous and average (per cycle) electric and magnetic field vectors
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Format: |magnitude|: (x, y, z)</li>
+                            <li>Averages update only when a complete cycle finishes</li>
+                            <li>Reset button clears accumulated values</li>
+                        </ul>
+                    </li>
+                    <li><strong>Momentum Vectors:</strong> Displays instantaneous and average linear and angular momentum
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Table format: Linear | Toroidal/Lemniscate Angular | Poloidal Angular | Total Angular</li>
+                            <li>Two rows: Instantaneous | Avg. Last Cycle</li>
+                            <li>All vectors displayed as |magnitude|: (x, y, z) format</li>
+                            <li>Labels change dynamically: "Toroidal Angular" in torus mode, "Lemniscate Angular" in lemniscate modes</li>
+                            <li>In model units (normalized by geometry size), not physical units</li>
+                            <li>Averages update only when a complete cycle finishes</li>
+                            <li>Reset button clears accumulated values</li>
+                        </ul>
+                    </li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Interaction</h3>
