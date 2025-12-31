@@ -21,6 +21,9 @@ function init() {
     let cameraDistance = 12;
     let cameraRotationX = 1.57; // π/2
     let cameraRotationY = 1.57; // π/2
+    // Screen-space translation (CSS transform, not 3D)
+    let screenOffsetX = 0;
+    let screenOffsetY = 0;
     const camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
@@ -924,9 +927,30 @@ function init() {
     function updateCamera() {
         // Standard spherical to Cartesian conversion
         // This is the mathematically correct formula
-        const x = cameraDistance * Math.sin(cameraRotationX) * Math.cos(cameraRotationY);
-        const y = cameraDistance * Math.cos(cameraRotationX);
-        const z = cameraDistance * Math.sin(cameraRotationX) * Math.sin(cameraRotationY);
+        
+        // Normalize X to [0, 2π) to determine hemisphere
+        let normalizedX = cameraRotationX % (2 * Math.PI);
+        if (normalizedX < 0) normalizedX += 2 * Math.PI;
+        
+        // Determine if we're in the back hemisphere (X in [π, 2π))
+        const isBackHemisphere = normalizedX > Math.PI;
+        
+        // Flip camera up vector when in back hemisphere to maintain correct orientation
+        if (isBackHemisphere) {
+            camera.up.set(0, -1, 0);
+        } else {
+            camera.up.set(0, 1, 0);
+        }
+        
+        // Use original spherical coordinate formula
+        let x = Math.sin(cameraRotationX) * Math.cos(cameraRotationY);
+        let y = Math.cos(cameraRotationX);
+        let z = Math.sin(cameraRotationX) * Math.sin(cameraRotationY);
+        
+        // Scale by distance
+        x = x * cameraDistance;
+        y = y * cameraDistance;
+        z = z * cameraDistance;
         
         camera.position.set(x, y, z);
         camera.lookAt(0, 0, 0);
@@ -1566,6 +1590,11 @@ function init() {
         cameraDistance = 12;
         cameraRotationX = 1.57; // π/2
         cameraRotationY = 1.57; // π/2
+        screenOffsetX = 0;
+        screenOffsetY = 0;
+        
+        // Reset CSS transform
+        canvasContainer.style.transform = 'translate(0px, 0px)';
         
         // Set flag to prevent 'input' event handlers from running
         isProgrammaticUpdate = true;
@@ -2037,22 +2066,34 @@ function init() {
         }
     }
 
-    // Mouse controls for camera rotation
-    let isMouseDown = false;
+    // Mouse controls for camera rotation and screen translation
+    let isLeftMouseDown = false;
+    let isRightMouseDown = false;
     let mouseX = 0;
     let mouseY = 0;
 
     renderer.domElement.addEventListener('mousedown', (e) => {
-        isMouseDown = true;
+        // Prevent right-click context menu
+        if (e.button === 2) {
+            e.preventDefault();
+        }
+        
+        if (e.button === 0) { // Left button
+            isLeftMouseDown = true;
+        } else if (e.button === 2) { // Right button
+            isRightMouseDown = true;
+        }
+        
         mouseX = e.clientX;
         mouseY = e.clientY;
     });
 
     renderer.domElement.addEventListener('mousemove', (e) => {
-        if (isMouseDown) {
-            const deltaX = e.clientX - mouseX;
-            const deltaY = e.clientY - mouseY;
-            
+        const deltaX = e.clientX - mouseX;
+        const deltaY = e.clientY - mouseY;
+        
+        if (isLeftMouseDown) {
+            // Left button: Rotate camera
             cameraRotationY += deltaX * 0.01;
             cameraRotationX += deltaY * 0.01;
             
@@ -2069,18 +2110,35 @@ function init() {
             updateValueDisplay('cameraRotationX', cameraRotationX);
             updateValueDisplay('cameraRotationY', cameraRotationY);
             updateCamera();
+        } else if (isRightMouseDown) {
+            // Right button: Translate screen (CSS transform)
+            screenOffsetX += deltaX;
+            screenOffsetY += deltaY;
             
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            // Apply CSS transform to canvas container
+            canvasContainer.style.transform = `translate(${screenOffsetX}px, ${screenOffsetY}px)`;
+        }
+        
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    renderer.domElement.addEventListener('mouseup', (e) => {
+        if (e.button === 0) { // Left button
+            isLeftMouseDown = false;
+        } else if (e.button === 2) { // Right button
+            isRightMouseDown = false;
         }
     });
 
-    renderer.domElement.addEventListener('mouseup', () => {
-        isMouseDown = false;
-    });
-
     renderer.domElement.addEventListener('mouseleave', () => {
-        isMouseDown = false;
+        isLeftMouseDown = false;
+        isRightMouseDown = false;
+    });
+    
+    // Prevent right-click context menu
+    renderer.domElement.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
     });
 
     // Wheel for zoom

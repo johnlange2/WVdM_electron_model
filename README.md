@@ -55,7 +55,7 @@ Then open `http://localhost:8000` in your browser.
 
 #### Buttons (Top of Controls Panel)
 
-- **Reset Camera**: Return camera to default position (distance and rotation)
+- **Reset Camera**: Return camera to default position (distance, rotation, and screen translation)
 - **Clear Track**: Clear the photon's trail
 - **Pause/Play**: Pause or resume the photon animation
 - **Set r/R to fine structure constant** / **Set minor and major axes to 1**: 
@@ -101,7 +101,8 @@ Then open `http://localhost:8000` in your browser.
 
 #### Mouse Controls
 
-- **Click and Drag**: Rotate the camera around the torus
+- **Left Button + Drag**: Rotate the camera around the torus
+- **Right Button + Drag**: Translate the view (pan) - moves the center point on screen without distortion
 - **Mouse Wheel**: Zoom in/out
 
 #### Display Panels
