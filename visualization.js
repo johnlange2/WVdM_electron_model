@@ -230,7 +230,8 @@ function init() {
         side: THREE.DoubleSide // Ensure lines are visible from both sides
     });
     const trailPoints = [];
-    const trailColors = []; // Store colors for each point
+    const trailColorIndices = []; // Store color indices (0-127) for each point
+    const trailObstructionFlags = []; // Store obstruction state for each point (boolean)
     const trailOriginalIndices = []; // Track original sequential index for each point in trailPoints (to detect gaps)
     const trailToroidalAngles = []; // Store toroidal angle for each point (without precession, for trail length tracking)
     const trail = new THREE.Line(trailGeometry, trailMaterial);
@@ -248,15 +249,92 @@ function init() {
         side: THREE.DoubleSide // Ensure lines are visible from both sides
     });
     const trailPoints2 = [];
-    const trailColors2 = []; // Store colors for each point
+    const trailColorIndices2 = []; // Store color indices (0-127) for each point
+    const trailObstructionFlags2 = []; // Store obstruction state for each point (boolean)
     const trailOriginalIndices2 = []; // Track original sequential index for each point in trailPoints2 (to detect gaps)
     const trailToroidalAngles2 = []; // Store toroidal angle for each point (without precession, for trail length tracking)
     const trail2 = new THREE.Line(trailGeometry2, trailMaterial2);
     trail2.renderOrder = 1000; // Render trails on top to ensure visibility
     scene.add(trail2);
     
+    // Pre-calculated gradient color table (128 colors: white → light yellow → yellow → bright red → red → dark red)
+    // Index 0 = white (newest), Index 127 = dark red (oldest)
+    const GRADIENT_TABLE_SIZE = 128;
+    const gradientColorTable = [];
+    for (let i = 0; i < GRADIENT_TABLE_SIZE; i++) {
+        // Build from white to dark red: i=0 → white, i=127 → dark red
+        const t = i / (GRADIENT_TABLE_SIZE - 1); // 0 to 1
+        let r, g, b;
+        
+        // Interpolate between color stops (white → light yellow → yellow → bright red → red → dark red)
+        if (t < 0.15) {
+            // White to Light Yellow
+            const localT = t / 0.15; // Normalize to [0, 1] for this segment
+            r = 1;
+            g = 1;
+            b = 1 - localT * 0.3; // White (1,1,1) to Light Yellow (1, 1, 0.7)
+        } else if (t < 0.35) {
+            // Light Yellow to Yellow
+            const localT = (t - 0.15) / 0.2; // Normalize to [0, 1] for this segment
+            r = 1;
+            g = 1;
+            b = 0.7 - localT * 0.7; // Light Yellow (1, 1, 0.7) to Yellow (1, 1, 0)
+        } else if (t < 0.65) {
+            // Yellow to Bright Red (wider orange-like section)
+            const localT = (t - 0.35) / 0.3; // Normalize to [0, 1] for this segment (wider: 30% instead of 20%)
+            r = 1;
+            g = 1 - localT * 0.2; // Yellow (1, 1, 0) to Bright Red (1, 0.8, 0)
+            b = 0;
+        } else if (t < 0.8) {
+            // Bright Red to Red
+            const localT = (t - 0.65) / 0.15; // Normalize to [0, 1] for this segment
+            r = 1;
+            g = 0.8 - localT * 0.8; // Bright Red (1, 0.8, 0) to Red (1, 0, 0)
+            b = 0;
+        } else {
+            // Red to Dark Red (darker)
+            const localT = (t - 0.8) / 0.2; // Normalize to [0, 1] for this segment
+            // Red (1, 0, 0) to Dark Red (0.5, 0.05, 0.05) - darker than before
+            r = 1 - localT * 0.5; // 1.0 → 0.5 (darker)
+            g = localT * 0.05;     // 0.0 → 0.05 (darker)
+            b = localT * 0.05;     // 0.0 → 0.05 (darker)
+        }
+        
+        gradientColorTable.push(new THREE.Color(r, g, b));
+    }
+    
+    // Function to get color index from angle difference
+    // Gradient table: index 0 = white, index 127 = dark red
+    // For forward spin: newest = white (index 0), oldest = dark red (index 127) - current behavior works perfectly
+    // For reverse spin: newest = dark red (index 127), oldest = white (index 0) - reverse the mapping
+    function getColorIndex(angleDiff, cycleLength) {
+        // Normalize angle difference to [0, cycleLength) range
+        // Handle both positive and negative differences, and wrapping
+        let normalizedDiff = angleDiff % cycleLength;
+        if (normalizedDiff < 0) {
+            normalizedDiff += cycleLength;
+        }
+        // Calculate t: 0 = newest (angleDiff = 0), 1 = oldest (angleDiff = cycleLength)
+        const t = normalizedDiff / cycleLength;
+        
+        // Apply spin direction: reverse the color mapping when spin direction is reverse
+        // Forward (spinDirection = -1): keep current behavior (reversedT = 1 - t) - works perfectly
+        // Reverse (spinDirection = 1): reverse the mapping (use t directly) - opposite direction
+        let colorT;
+        if (spinDirection > 0) {
+            // Reverse spin: use t directly (opposite of forward's 1-t)
+            colorT = t; // This will give opposite color order from forward
+        } else {
+            // Forward spin: keep current behavior that works perfectly
+            colorT = 1 - t; // Current behavior that works perfectly
+        }
+        
+        const index = Math.floor(colorT * (GRADIENT_TABLE_SIZE - 1));
+        return Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, index));
+    }
+    
     // Helper function to update trail geometry (simple line - WebGL doesn't support linewidth)
-    function updateTrailGeometry(points, colors) {
+    function updateTrailGeometry(points, colorIndices, obstructionFlags) {
         if (points.length < 2) {
             trailGeometry.setFromPoints([]);
             return;
@@ -264,27 +342,31 @@ function init() {
         
         trailGeometry.setFromPoints(points);
         
-        // Set vertex colors
+        // Set vertex colors by mapping indices to gradient table
         const colorArray = new Float32Array(points.length * 3);
         for (let i = 0; i < points.length; i++) {
-            const color = (colors && colors[i]) ? colors[i] : new THREE.Color(0xffdd00); // Bright yellow
-            if (!(color instanceof THREE.Color)) {
-                const c = new THREE.Color(color);
-                colorArray[i * 3] = c.r;
-                colorArray[i * 3 + 1] = c.g;
-                colorArray[i * 3 + 2] = c.b;
-            } else {
-                colorArray[i * 3] = color.r;
-                colorArray[i * 3 + 1] = color.g;
-                colorArray[i * 3 + 2] = color.b;
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (transparency === 0) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
             }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
         }
         trailGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
         trailGeometry.setIndex(null);
     }
     
     // Helper function to update trail2 geometry (for right spheroid in S-type mode)
-    function updateTrailGeometry2(points, colors) {
+    function updateTrailGeometry2(points, colorIndices, obstructionFlags) {
         if (points.length < 2) {
             trailGeometry2.setFromPoints([]);
             return;
@@ -292,20 +374,24 @@ function init() {
         
         trailGeometry2.setFromPoints(points);
         
-        // Set vertex colors
+        // Set vertex colors by mapping indices to gradient table
         const colorArray = new Float32Array(points.length * 3);
         for (let i = 0; i < points.length; i++) {
-            const color = (colors && colors[i]) ? colors[i] : new THREE.Color(0xffdd00); // Bright yellow
-            if (!(color instanceof THREE.Color)) {
-                const c = new THREE.Color(color);
-                colorArray[i * 3] = c.r;
-                colorArray[i * 3 + 1] = c.g;
-                colorArray[i * 3 + 2] = c.b;
-            } else {
-                colorArray[i * 3] = color.r;
-                colorArray[i * 3 + 1] = color.g;
-                colorArray[i * 3 + 2] = color.b;
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (transparency === 0) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
             }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
         }
         trailGeometry2.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
         trailGeometry2.setIndex(null);
@@ -987,7 +1073,8 @@ function init() {
         
         // Clear trail when torus geometry changes to avoid old points extending beyond new bounds
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
@@ -1064,12 +1151,14 @@ function init() {
         
         // Clear trail when geometry changes
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
         // Also clear trail2 for S-type
         trailPoints2.length = 0;
-        trailColors2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
         trailOriginalIndices2.length = 0;
         trailToroidalAngles2.length = 0;
         if (trailPoints.length > 1) {
@@ -1136,7 +1225,8 @@ function init() {
         
         // Clear trail when spheroid geometry changes to avoid old points extending beyond new bounds
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
@@ -1348,28 +1438,21 @@ function init() {
     }
 
     // Control event listeners
-    // Function to update trail colors based on current transparency
+    // Function to update trail obstruction flags (colors are updated via indices in animate loop)
     function updateTrailColorsForTransparency() {
-        // Recalculate obstruction for all trail points and update colors
+        // Recalculate obstruction for all trail points
         for (let i = 0; i < trailPoints.length; i++) {
-            const isTrailPointObstructed = isPhotonObstructed(trailPoints[i]);
-            
-            if (isTrailPointObstructed) {
-                if (transparency === 0) {
-                    // At transparency = 0, use very dark color for obstructed segments
-                    trailColors[i] = new THREE.Color(0x000000); // Black (essentially invisible)
-                } else {
-                    trailColors[i] = new THREE.Color(0xaa8800); // Darker yellow-brown for obstructed segments (brighter than before but still less intense)
-                }
-            } else {
-                trailColors[i] = new THREE.Color(0xffdd00); // Bright yellow for unobstructed
+            trailObstructionFlags[i] = isPhotonObstructed(trailPoints[i]);
+        }
+        
+        // Also update trail2 for S-type mode
+        if (pathMode === 'lemniscate-s') {
+            for (let i = 0; i < trailPoints2.length; i++) {
+                trailObstructionFlags2[i] = isPhotonObstructed(trailPoints2[i]);
             }
         }
         
-        // Rebuild geometry with updated colors (show all points, dark color for obstructed when transparency = 0)
-        if (trailPoints.length > 1) {
-            updateTrailGeometry(trailPoints, trailColors);
-        }
+        // Geometry will be updated in animate loop with current color indices
     }
 
     controls.transparency.addEventListener('input', (e) => {
@@ -1541,7 +1624,8 @@ function init() {
     controls.precession.addEventListener('input', (e) => {
         // Clear trail when changing precession to avoid confusion
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
@@ -1553,7 +1637,8 @@ function init() {
         precession = parseFloat(e.target.value) || 0;
         // Clear trail when changing precession to avoid confusion
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
@@ -1617,7 +1702,8 @@ function init() {
     controls.setFineStructure.addEventListener('click', () => {
         // Clear trail when setting values to avoid confusion
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
@@ -1626,7 +1712,8 @@ function init() {
         // For S-type: also clear the second trail
         if (pathMode === 'lemniscate-s') {
             trailPoints2.length = 0;
-            trailColors2.length = 0;
+            trailColorIndices2.length = 0;
+            trailObstructionFlags2.length = 0;
             trailToroidalAngles2.length = 0;
             trailOriginalIndices2.length = 0;
             // Always update geometry, even when empty, to ensure visual clearing
@@ -1726,7 +1813,8 @@ function init() {
             
             // Clear trail when switching modes
             trailPoints.length = 0;
-            trailColors.length = 0;
+            trailColorIndices.length = 0;
+            trailObstructionFlags.length = 0;
             trailToroidalAngles.length = 0;
             if (trailPoints.length > 1) {
                 trailGeometry.setFromPoints(trailPoints);
@@ -1869,7 +1957,8 @@ function init() {
         windingRatio = e.target.value;
         // Clear trail when changing winding ratio to avoid confusion
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
@@ -1915,7 +2004,8 @@ function init() {
         spinDirection = parseInt(e.target.value);
         // Clear trail when changing spin direction
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
@@ -2019,7 +2109,8 @@ function init() {
 
     controls.clearTrack.addEventListener('click', () => {
         trailPoints.length = 0;
-        trailColors.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
         if (trailPoints.length > 1) {
@@ -2029,7 +2120,8 @@ function init() {
         // For S-type: also clear the second trail
         if (pathMode === 'lemniscate-s') {
             trailPoints2.length = 0;
-            trailColors2.length = 0;
+            trailColorIndices2.length = 0;
+            trailObstructionFlags2.length = 0;
             trailOriginalIndices2.length = 0;
             trailToroidalAngles2.length = 0;
             if (trailPoints2.length > 1) {
@@ -3137,18 +3229,29 @@ function init() {
             
             // Calculate current toroidal angle (base angle without precession for trail length tracking)
             // This is the angle that would be used if precession = 0, for trail length purposes only
-            // For lemniscate mode, we need to track the actual parameter u (0 to 4π per cycle)
+            // For lemniscate mode, we need to track the actual parameter u
             // For torus mode, we track the toroidal angle
             let currentToroidalAngle;
-            if (pathMode === 'lemniscate-s' || pathMode === 'lemniscate-c') {
-                // For lemniscate: track the parameter u directly (0 to 4π per cycle)
-                // u = animationTime * 4π * (1 + precession) * spinDirection
-                // For trail length (ignoring precession): u = animationTime * 4π * spinDirection
+            let baseCycleLength; // Actual cycle length for gradient (one full path cycle)
+            
+            if (pathMode === 'lemniscate-c') {
+                // C-type (Viviani curve): completes one cycle in 2π parameter range
+                // Track using 4π for consistency with S-type, but gradient should span 2π
                 currentToroidalAngle = animationTime * 4 * Math.PI * spinDirection;
+                baseCycleLength = 2 * Math.PI; // Actual curve cycle is 2π
+            } else if (pathMode === 'lemniscate-s') {
+                // S-type: uses 4π for the major path
+                currentToroidalAngle = animationTime * 4 * Math.PI * spinDirection;
+                baseCycleLength = 4 * Math.PI; // Full cycle is 4π
             } else {
                 // For torus: use the standard calculation
                 currentToroidalAngle = animationTime * uToroidalPerRotation * spinDirection;
+                // Torus cycle length depends on winding ratio
+                baseCycleLength = uToroidalPerRotation; // 4π for 1:2, 2π for 2:1
             }
+            
+            // Apply precession factor: 4π/p if precession > 0, else use base cycle length
+            const gradientCycleLength = precession > 0 ? 4 * Math.PI / precession : baseCycleLength;
             
             // Ensure trail points stay within bounds (only for torus mode)
             let constrainedPosition = position.clone();
@@ -3187,9 +3290,6 @@ function init() {
                 const safer = Math.max(0.1, r);
                 const offset2r = 2 * safer; // Offset for second trail (+2r from first)
                 
-                const unobstructedColor = new THREE.Color(0xffdd00); // Bright yellow for unobstructed
-                const obstructedColor = new THREE.Color(0xaa8800); // Darker yellow-brown for obstructed segments
-                
                 // Calculate left track position with precession (if enabled)
                 let leftPoint;
                 let showLeftTrail;
@@ -3216,7 +3316,10 @@ function init() {
                     const isLeftObstructed = isPhotonObstructed(leftPoint);
                     
                     trailPoints.push(leftPoint);
-                    trailColors.push(isLeftObstructed ? obstructedColor : unobstructedColor);
+                    // Calculate color index: newest point (angle diff = 0) gets index 0
+                    const angleDiff = 0; // Current point is at current angle
+                    trailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
+                    trailObstructionFlags.push(isLeftObstructed);
                     trailToroidalAngles.push(currentToroidalAngle);
                 }
                 
@@ -3248,7 +3351,10 @@ function init() {
                     const isRightObstructed = isPhotonObstructed(rightPoint);
                     
                     trailPoints2.push(rightPoint);
-                    trailColors2.push(isRightObstructed ? obstructedColor : unobstructedColor);
+                    // Calculate color index: newest point (angle diff = 0) gets index 0
+                    const angleDiff = 0; // Current point is at current angle
+                    trailColorIndices2.push(getColorIndex(angleDiff, gradientCycleLength));
+                    trailObstructionFlags2.push(isRightObstructed);
                     trailToroidalAngles2.push(currentToroidalAngle);
                 }
                 
@@ -3269,11 +3375,11 @@ function init() {
                 
                 // Always add all points to trailPoints to track original sequence
                 // This allows us to detect gaps even when transparency = 0
-                const unobstructedColor = new THREE.Color(0xffdd00); // Bright yellow for unobstructed
-                const obstructedColor = new THREE.Color(0xaa8800); // Darker yellow-brown for obstructed segments (brighter than before but still less intense)
-                
                 trailPoints.push(constrainedPosition);
-                trailColors.push(isTrailPointObstructed ? obstructedColor : unobstructedColor);
+                // Calculate color index: newest point (angle diff = 0) gets index 0
+                const angleDiff = 0; // Current point is at current angle
+                trailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
+                trailObstructionFlags.push(isTrailPointObstructed);
                 trailToroidalAngles.push(currentToroidalAngle);
                 
                 // Track original sequential index (increments for every point added, creating gaps when points are filtered out)
@@ -3305,7 +3411,8 @@ function init() {
                         }
                         
                         trailPoints.shift();
-                        trailColors.shift();
+                        trailColorIndices.shift();
+                        trailObstructionFlags.shift();
                         trailOriginalIndices.shift();
                         trailToroidalAngles.shift();
                         trailChanged = true;
@@ -3323,7 +3430,8 @@ function init() {
                         }
                         
                         trailPoints2.shift();
-                        trailColors2.shift();
+                        trailColorIndices2.shift();
+                        trailObstructionFlags2.shift();
                         trailOriginalIndices2.shift();
                         trailToroidalAngles2.shift();
                         trailChanged2 = true;
@@ -3343,7 +3451,8 @@ function init() {
                         
                         // Remove oldest point
                         trailPoints.shift();
-                        trailColors.shift();
+                        trailColorIndices.shift();
+                        trailObstructionFlags.shift();
                         trailOriginalIndices.shift();
                         trailToroidalAngles.shift();
                         trailChanged = true;
@@ -3357,7 +3466,8 @@ function init() {
                 if (trailPoints.length > maxTrailPoints) {
                     const removeCount = trailPoints.length - maxTrailPoints;
                     trailPoints.splice(0, removeCount);
-                    trailColors.splice(0, removeCount);
+                    trailColorIndices.splice(0, removeCount);
+                    trailObstructionFlags.splice(0, removeCount);
                     trailOriginalIndices.splice(0, removeCount);
                     trailToroidalAngles.splice(0, removeCount);
                     trailChanged = true;
@@ -3365,7 +3475,8 @@ function init() {
                 if (trailPoints2.length > maxTrailPoints) {
                     const removeCount = trailPoints2.length - maxTrailPoints;
                     trailPoints2.splice(0, removeCount);
-                    trailColors2.splice(0, removeCount);
+                    trailColorIndices2.splice(0, removeCount);
+                    trailObstructionFlags2.splice(0, removeCount);
                     trailOriginalIndices2.splice(0, removeCount);
                     trailToroidalAngles2.splice(0, removeCount);
                     trailChanged2 = true;
@@ -3375,11 +3486,26 @@ function init() {
                 if (trailPoints.length > maxTrailPoints) {
                     const removeCount = trailPoints.length - maxTrailPoints;
                     trailPoints.splice(0, removeCount);
-                    trailColors.splice(0, removeCount);
+                    trailColorIndices.splice(0, removeCount);
+                    trailObstructionFlags.splice(0, removeCount);
                     trailOriginalIndices.splice(0, removeCount);
                     trailToroidalAngles.splice(0, removeCount);
                     trailChanged = true;
                 }
+            }
+            
+            // Recalculate color indices for all points based on current angle (rotate color map)
+            // This is fast - just integer arithmetic, no color object creation
+            // Note: angleDiff = currentToroidalAngle - trailToroidalAngles[i]
+            // For newest point: angleDiff ≈ 0 (should be white)
+            // For oldest point: angleDiff ≈ cycleLength (should be brown)
+            for (let i = 0; i < trailPoints.length; i++) {
+                const angleDiff = currentToroidalAngle - trailToroidalAngles[i];
+                trailColorIndices[i] = getColorIndex(angleDiff, gradientCycleLength);
+            }
+            for (let i = 0; i < trailPoints2.length; i++) {
+                const angleDiff = currentToroidalAngle - trailToroidalAngles2[i];
+                trailColorIndices2[i] = getColorIndex(angleDiff, gradientCycleLength);
             }
             
             // Only update trail geometry
@@ -3390,94 +3516,55 @@ function init() {
                 
                 // Update first trail (left spheroid)
                 if (trailPoints.length > 1 && shouldUpdateTrail) {
-                    let pointsToRender = trailPoints;
-                    let colorsToRender = trailColors;
-                    
-                    if (transparency === 0) {
-                        const updatedColors = [];
+                    // Update obstruction flags if needed (throttled)
+                    if (transparency === 0 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
                         const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300));
-                        let lastColor = new THREE.Color(0xffdd00);
-                        
                         for (let i = 0; i < trailPoints.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints.length - 1) {
-                                const isObstructed = isPhotonObstructed(trailPoints[i]);
-                                lastColor = isObstructed ? new THREE.Color(0x000000) : new THREE.Color(0xffdd00);
+                                trailObstructionFlags[i] = isPhotonObstructed(trailPoints[i]);
                             }
-                            updatedColors.push(lastColor.clone());
                         }
-                        colorsToRender = updatedColors;
                     }
                     
-                    if (pointsToRender.length > 1) {
-                        updateTrailGeometry(pointsToRender, colorsToRender);
-                    } else {
-                        updateTrailGeometry([], []);
-                    }
+                    updateTrailGeometry(trailPoints, trailColorIndices, trailObstructionFlags);
+                } else if (trailPoints.length <= 1) {
+                    updateTrailGeometry([], [], []);
                 }
                 
                 // Update second trail (right spheroid)
                 if (trailPoints2.length > 1 && shouldUpdateTrail2) {
-                    let pointsToRender2 = trailPoints2;
-                    let colorsToRender2 = trailColors2;
-                    
-                    if (transparency === 0) {
-                        const updatedColors2 = [];
+                    // Update obstruction flags if needed (throttled)
+                    if (transparency === 0 && (trailChanged2 || (Math.floor(animationTime * 60) % 6 === 0))) {
                         const checkInterval = Math.max(1, Math.floor(trailPoints2.length / 300));
-                        let lastColor2 = new THREE.Color(0xffdd00);
-                        
                         for (let i = 0; i < trailPoints2.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints2.length - 1) {
-                                const isObstructed = isPhotonObstructed(trailPoints2[i]);
-                                lastColor2 = isObstructed ? new THREE.Color(0x000000) : new THREE.Color(0xffdd00);
+                                trailObstructionFlags2[i] = isPhotonObstructed(trailPoints2[i]);
                             }
-                            updatedColors2.push(lastColor2.clone());
                         }
-                        colorsToRender2 = updatedColors2;
                     }
                     
-                    if (pointsToRender2.length > 1) {
-                        updateTrailGeometry2(pointsToRender2, colorsToRender2);
-                    } else {
-                        updateTrailGeometry2([], []);
-                    }
+                    updateTrailGeometry2(trailPoints2, trailColorIndices2, trailObstructionFlags2);
+                } else if (trailPoints2.length <= 1) {
+                    updateTrailGeometry2([], [], []);
                 }
             } else {
                 // For other modes: single trail
                 const shouldUpdateTrail = trailChanged || (Math.floor(animationTime * 60) % 3 === 0);
                 
                 if (trailPoints.length > 1 && shouldUpdateTrail) {
-                    // When transparency = 0, filter out obstructed points and create separate line segments
-                    let pointsToRender = trailPoints;
-                    let colorsToRender = trailColors;
-                    let indicesToUse = null;
-                    
-                    if (transparency === 0) {
-                        // At transparency = 0, show all points but use dark color for obstructed segments
-                        // Throttle obstruction recalculation - only check every Nth point to reduce raycasting
-                        const updatedColors = [];
-                        const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300)); // Check at most 300 points
-                        let lastColor = new THREE.Color(0xffdd00); // Bright yellow
-                        
+                    // Update obstruction flags if needed (throttled)
+                    if (transparency === 0 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
+                        const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300));
                         for (let i = 0; i < trailPoints.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints.length - 1) {
-                                // Recalculate obstruction for sampled points
-                                const isObstructed = isPhotonObstructed(trailPoints[i]);
-                                lastColor = isObstructed ? new THREE.Color(0x000000) : new THREE.Color(0xffdd00); // Bright yellow
+                                trailObstructionFlags[i] = isPhotonObstructed(trailPoints[i]);
                             }
-                            updatedColors.push(lastColor.clone());
                         }
-                        
-                        pointsToRender = trailPoints;
-                        colorsToRender = updatedColors;
-                        // No need for custom indices - use default line connectivity
                     }
                     
-                    if (pointsToRender.length > 1) {
-                        updateTrailGeometry(pointsToRender, colorsToRender);
-                    } else {
-                        // Not enough points, clear geometry
-                        updateTrailGeometry([], []);
-                    }
+                    updateTrailGeometry(trailPoints, trailColorIndices, trailObstructionFlags);
+                } else if (trailPoints.length <= 1) {
+                    updateTrailGeometry([], [], []);
                 }
             }
             

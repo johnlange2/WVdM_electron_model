@@ -13,6 +13,7 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
 - **Photon animation**: Visual representation of the photon moving along the selected path
 - **Photon Speed control**: Logarithmic scale from 0.1 to 10 (default 1.0)
 - **Trail visualization**: Configurable trail length in toroidal rotations (0.1 to unlimited)
+- **Track color gradient**: The photon's track displays a temperature-like color gradient from white (newest) through light yellow, yellow, bright red, red, to dark red (oldest). The gradient direction reverses when spin direction is set to Reverse.
 - **Precession effect**: Spirograph-like precession pattern for both C and S curves:
   - **C curve**: Rotating E/M fields create spirograph patterns
   - **S curve**: Both left and right loops rotate independently, creating interleaved patterns
@@ -88,6 +89,8 @@ Then open `http://localhost:8000` in your browser.
 - **Trail Length (toroidal rotations)**: Length of the photon's trail in toroidal rotations
   - 1 = one full track (4π for 1:2 winding, 2π for 2:1 winding)
   - Logarithmic scale from 0.1 (left) to 1.0 (middle) to 100 (right, unlimited)
+  - The track displays a color gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest)
+  - Gradient direction reverses when Spin Direction is set to Reverse
 - **Precession (try values <= 0.5, e.g. 0.1)**: Adds a spirograph-like precession effect
   - **C curve**: Rotating E/M fields create continuous spirograph patterns
   - **S curve**: Both left and right loops rotate independently around Y-axis
