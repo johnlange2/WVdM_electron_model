@@ -317,16 +317,17 @@ function init() {
         // Calculate t: 0 = newest (angleDiff = 0), 1 = oldest (angleDiff = cycleLength)
         const t = normalizedDiff / cycleLength;
         
-        // Apply spin direction: reverse the color mapping when spin direction is reverse
-        // Forward (spinDirection = -1): keep current behavior (reversedT = 1 - t) - works perfectly
-        // Reverse (spinDirection = 1): reverse the mapping (use t directly) - opposite direction
+        // Apply chirality combination: color gradient direction depends on toroidal chirality (particle type)
+        // Electron (toroidalChirality = -1): always use reversed mapping (1-t)
+        // Positron (toroidalChirality = +1): always use direct mapping (t)
+        // This ensures consistent color cycling: spin direction doesn't affect color gradient direction
         let colorT;
-        if (spinDirection > 0) {
-            // Reverse spin: use t directly (opposite of forward's 1-t)
-            colorT = t; // This will give opposite color order from forward
+        if (toroidalChirality < 0) {
+            // Electron: use reversed mapping
+            colorT = 1 - t;
         } else {
-            // Forward spin: keep current behavior that works perfectly
-            colorT = 1 - t; // Current behavior that works perfectly
+            // Positron: use direct mapping
+            colorT = t;
         }
         
         const index = Math.floor(colorT * (GRADIENT_TABLE_SIZE - 1));
@@ -565,8 +566,22 @@ function init() {
     let precession = 0.0; // Precession parameter (default 0, no precession)
     let particleType = 'electron'; // 'electron' or 'positron'
     let windingRatio = '1:2'; // '2:1' (2π toroidal, 4π poloidal) or '1:2' (4π toroidal, 2π poloidal)
-    let spinDirection = -1; // -1 for forward (clockwise), 1 for reverse (counter-clockwise)
+    let spinDirection = -1; // -1 for spin up, 1 for spin down (legacy, kept for compatibility)
     let pathMode = 'torus'; // 'torus', 'lemniscate-s', or 'lemniscate-c'
+    
+    // Chirality and charge variables (separated from spin)
+    // Coordinate convention: z-axis is major toroidal axis (magnetic north direction)
+    // Toroidal motion: around major circle (around z-axis)
+    // Poloidal motion: around minor circle (tube cross-section)
+    let toroidalChirality = -1;  // -1 for electron (left-handed around +z), +1 for positron (right-handed around +z)
+                                 // Controls direction of motion around the major toroidal circle
+                                 // Set by particle type (electron/positron)
+    let poloidalChirality = -1;  // -1 for spin up, +1 for spin down
+                                 // Controls direction of motion around the minor circle (circular polarization)
+                                 // Set by spin direction (spin up/down)
+    let chargeSign = -1;         // -1 for electron, +1 for positron
+                                 // Controls electric field direction (inward for electron, outward for positron)
+                                 // Set by particle type (electron/positron)
     
     // Fine structure constant (α ≈ 1/137.036)
     const FINE_STRUCTURE_CONSTANT = 1 / 137.035999084;
@@ -629,8 +644,8 @@ function init() {
             uToroidal = 2 * Math.PI;
             vPoloidal = 4 * Math.PI;
         }
-        const u = timeParam * uToroidal * (1 + precession) * spinDirection; // Angle around the major radius (toroidal) with precession and spin direction
-        const v = timeParam * vPoloidal * (1 + precession * 2) * spinDirection; // Angle around the minor radius (poloidal) with 2× precession and spin direction
+        const u = timeParam * uToroidal * (1 + precession) * toroidalChirality; // Angle around the major radius (toroidal) with precession and toroidal chirality
+        const v = timeParam * vPoloidal * (1 + precession * 2) * poloidalChirality; // Angle around the minor radius (poloidal) with 2× precession and poloidal chirality
         
         // Standard torus parametric equations
         // Distance from center in xy-plane: majorRadius + minorRadius * cos(v)
@@ -671,11 +686,11 @@ function init() {
     }
     
     // Get base left S-curve position (no precession)
-    function getSLeftBase(animationTime, spinDirection, minorAxis, majorAxis) {
+    function getSLeftBase(animationTime, toroidalChirality, minorAxis, majorAxis) {
         const a = minorAxis;
         const c = majorAxis;
         
-        const basePhase = animationTime * 4 * Math.PI * spinDirection;
+        const basePhase = animationTime * 4 * Math.PI * toroidalChirality;
         const uNormalized = ((basePhase % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);
         
         const x0 = a * (1 + Math.cos(uNormalized)) / 2 - a;
@@ -686,11 +701,11 @@ function init() {
     }
     
     // Get base right S-curve position (no precession)
-    function getSRightBase(animationTime, spinDirection, minorAxis, majorAxis) {
+    function getSRightBase(animationTime, toroidalChirality, minorAxis, majorAxis) {
         const a = minorAxis;
         const c = majorAxis;
         
-        const u = animationTime * 4 * Math.PI * spinDirection;
+        const u = animationTime * 4 * Math.PI * toroidalChirality;
         const uNormalized = ((u % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);
         
         const uReversed = (4 * Math.PI - uNormalized + 2 * Math.PI) % (4 * Math.PI);
@@ -708,7 +723,7 @@ function init() {
     }
     
     // Get right S-curve position with precession
-    function getSRightPrecessed(animationTime, spinDirection, minorAxis, majorAxis, precession) {
+    function getSRightPrecessed(animationTime, toroidalChirality, minorAxis, majorAxis, precession) {
         const a = minorAxis;
         const c = majorAxis;
         
@@ -716,7 +731,7 @@ function init() {
         const k = p > 0 ? 1 / p : 1;
         const totalLength = 4 * Math.PI * k;
         
-        const rawPhase = animationTime * 4 * Math.PI * spinDirection;
+        const rawPhase = animationTime * 4 * Math.PI * toroidalChirality;
         const multiPhase = ((rawPhase % totalLength) + totalLength) % totalLength;
         
         // Local S-lap phase for visibility etc.
@@ -755,7 +770,7 @@ function init() {
     }
     
     // Get left S-curve position with precession
-    function getSLeftPrecessed(animationTime, spinDirection, minorAxis, majorAxis, precession) {
+    function getSLeftPrecessed(animationTime, toroidalChirality, minorAxis, majorAxis, precession) {
         const a = minorAxis;
         const c = majorAxis;
         
@@ -765,7 +780,7 @@ function init() {
         const totalLength = 4 * Math.PI * k;  // L = 4π/p (or 4π if p = 0)
         
         // Multi-track phase that wraps over totalLength
-        const rawPhase = animationTime * 4 * Math.PI * spinDirection;
+        const rawPhase = animationTime * 4 * Math.PI * toroidalChirality;
         const multiPhase = ((rawPhase % totalLength) + totalLength) % totalLength;
         
         // Local S-lap phase uNormalized ∈ [0, 4π)
@@ -963,21 +978,23 @@ function init() {
             // C-type: Viviani curve completes one cycle in 2π parameter range
             // To match torus 1:2 mode visual speed (4π range), we double the parameter speed
             // Parameter t can grow beyond 4π to trace multiple laps
-            const t = timeParam * 2 * 4 * Math.PI * spinDirection; // Unbounded parameter
+            // Use toroidalChirality for the path direction (major circle motion)
+            const t = timeParam * 2 * 4 * Math.PI * toroidalChirality; // Unbounded parameter
             // Lemniscate phase: normalize t to [0, 4π) for curve parameterization
             const u = ((t % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);
             // Precession angle: grows linearly with t
             // After one 4π lap, theta advances by 2π * precession
-            const theta = spinDirection * (precession / 2) * t;
+            // Precession uses poloidalChirality (circular polarization direction)
+            const theta = poloidalChirality * (precession / 2) * t;
             const pos = getVivianiCurveLabFrame(u, R, r, theta);
             return new THREE.Vector3(pos.x, pos.y, pos.z);
         } else {
             // S-type: Use precession functions for left track
             if (precession === 0) {
-                const leftBase = getSLeftBase(timeParam, spinDirection, r, R);
+                const leftBase = getSLeftBase(timeParam, toroidalChirality, r, R);
                 return new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
             } else {
-                const leftPrecessed = getSLeftPrecessed(timeParam, spinDirection, r, R, precession);
+                const leftPrecessed = getSLeftPrecessed(timeParam, toroidalChirality, r, R, precession);
                 return new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
             }
         }
@@ -1918,6 +1935,19 @@ function init() {
     
     controls.particleType.addEventListener('change', (e) => {
         particleType = e.target.value;
+        
+        // Update chirality and charge based on particle type
+        // Electron: left-handed toroidal chirality, negative charge
+        // Positron: right-handed toroidal chirality, positive charge
+        if (particleType === 'electron') {
+            toroidalChirality = -1;  // Left-handed around +z
+            chargeSign = -1;          // Negative charge (E-field inward)
+        } else {
+            toroidalChirality = +1;  // Right-handed around +z
+            chargeSign = +1;          // Positive charge (E-field outward)
+        }
+        // Note: poloidalChirality is NOT changed here - it's controlled by spin direction only
+        
         // Reset accumulated fields when changing particle type
         accumulatedElectricField.set(0, 0, 0);
         accumulatedMagneticField.set(0, 0, 0);
@@ -2002,6 +2032,12 @@ function init() {
 
     controls.spinDirection.addEventListener('change', (e) => {
         spinDirection = parseInt(e.target.value);
+        
+        // Update poloidal chirality based on spin direction
+        // Spin up = -1, Spin down = +1 (or determine correct mapping)
+        poloidalChirality = spinDirection;
+        // Note: toroidalChirality and chargeSign are NOT changed here - they're controlled by particle type only
+        
         // Clear trail when changing spin direction
         trailPoints.length = 0;
         trailColorIndices.length = 0;
@@ -2329,10 +2365,9 @@ function init() {
             
             const electricField = new THREE.Vector3(Ex, Ey, Ez);
             
-            // For electron: already inward (negative normal), for positron: flip
-            if (particleType === 'positron') {
-                electricField.negate();
-            }
+            // Apply charge sign: electron (chargeSign = -1) points inward, positron (chargeSign = +1) points outward
+            // The calculation above gives inward direction, so multiply by chargeSign
+            electricField.multiplyScalar(chargeSign);
             
             // Get tangent = normalized velocity
             const Tx = velocity.x;
@@ -2419,7 +2454,8 @@ function init() {
             // The parameter t passed to this function is animationTime
             // For C-type, the curve parameter u goes from 0 to 4π for one full cycle
             // We use the same parameter calculation as in getFigure8Position
-            const tParam = t * 2 * 4 * Math.PI * spinDirection;
+            // Use toroidalChirality for the path direction (major circle motion)
+            const tParam = t * 2 * 4 * Math.PI * toroidalChirality;
             const u = ((tParam % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);
             const phi = u; // Phase rotates by 2π over one full circuit (u ∈ [0, 4π])
             
@@ -2430,12 +2466,12 @@ function init() {
             let Ey = cosPhi * Iy + sinPhi * Jy;
             let Ez = cosPhi * Iz + sinPhi * Jz;
             
-            // For electron: already inward on average (I points inward), for positron: flip
-            if (particleType === 'positron') {
-                Ex = -Ex;
-                Ey = -Ey;
-                Ez = -Ez;
-            }
+            // Apply charge sign to electric field
+            // Electron (chargeSign = -1): E points inward on average
+            // Positron (chargeSign = +1): E points outward on average
+            Ex *= chargeSign;
+            Ey *= chargeSign;
+            Ez *= chargeSign;
             
             const electricField = new THREE.Vector3(Ex, Ey, Ez);
             
@@ -2472,8 +2508,8 @@ function init() {
                 uToroidal = 2 * Math.PI;
                 vPoloidal = 4 * Math.PI;
             }
-            const u = animationTime * uToroidal * (1 + precession) * spinDirection;
-            const v = animationTime * vPoloidal * (1 + precession * 2) * spinDirection;
+            const u = animationTime * uToroidal * (1 + precession) * toroidalChirality;
+            const v = animationTime * vPoloidal * (1 + precession * 2) * poloidalChirality;
             
             // Calculate partial derivatives for surface tangent vectors
             const dx_du = -(majorRadius + minorRadius * Math.cos(v)) * Math.sin(u);
@@ -2493,15 +2529,14 @@ function init() {
                 .crossVectors(tangentU, tangentV)
                 .normalize();
             
-            // For electron: point inward (negate normal)
-            if (particleType === 'electron') {
-                electricField.negate();
-            }
+            // Apply charge sign: electron (chargeSign = -1) points inward, positron (chargeSign = +1) points outward
+            // Negative charge outward means positive field arrow points inward for electron
+            electricField.multiplyScalar(chargeSign);
             
             // For torus mode, calculate velocity direction from tangent vectors
             // The velocity is a combination of tangentU and tangentV based on the parameter rates
-            const du_dt = uToroidal * (1 + precession) * spinDirection;
-            const dv_dt = vPoloidal * (1 + precession * 2) * spinDirection;
+            const du_dt = uToroidal * (1 + precession) * toroidalChirality;
+            const dv_dt = vPoloidal * (1 + precession * 2) * poloidalChirality;
             const velocityDirection = new THREE.Vector3()
                 .addScaledVector(tangentU, du_dt)
                 .addScaledVector(tangentV, dv_dt)
@@ -2571,18 +2606,20 @@ function init() {
             // Get current parameter value
             // For C-type, we use 2x speed to match visual appearance with torus
             // Parameter t can grow beyond 4π to trace multiple laps
-            const t = animationTime * 2 * 4 * Math.PI * spinDirection; // Unbounded parameter
+            // Use toroidalChirality for the path direction (major circle motion)
+            const t = animationTime * 2 * 4 * Math.PI * toroidalChirality; // Unbounded parameter
             // Lemniscate phase: normalize t to [0, 4π) for curve parameterization
             const u = ((t % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);
             // Precession angle: grows linearly with t
-            const theta = spinDirection * (precession / 2) * t;
+            // Precession uses poloidalChirality (circular polarization direction)
+            const theta = poloidalChirality * (precession / 2) * t;
             
             // Calculate dt/dt (rate of change of parameter t with respect to time)
-            const dt_dt = 2 * 4 * Math.PI * spinDirection;
+            const dt_dt = 2 * 4 * Math.PI * toroidalChirality;
             // du/dt: since u = t % (4π), du/dt = dt/dt (within the normalized range)
             const du_dt = dt_dt;
-            // dTheta/dt: derivative of theta = spinDirection * (precession / 2) * t
-            const dTheta_dt = spinDirection * (precession / 2) * dt_dt;
+            // dTheta/dt: derivative of theta = poloidalChirality * (precession / 2) * t
+            const dTheta_dt = poloidalChirality * (precession / 2) * dt_dt;
             
             // Calculate derivatives analytically using normalized parameter u
             const cosU = Math.cos(u);
@@ -2628,19 +2665,19 @@ function init() {
             if (onLeft) {
                 // Left track: use new precession functions
                 if (precession === 0) {
-                    const leftBase = getSLeftBase(animationTime, spinDirection, r, R);
+                    const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
                     posCurrentVec = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
                 } else {
-                    const leftPrecessed = getSLeftPrecessed(animationTime, spinDirection, r, R, precession);
+                    const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
                     posCurrentVec = new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
                 }
             } else {
                 // Right track: use new precession functions
                 if (precession === 0) {
-                    const rightBase = getSRightBase(animationTime, spinDirection, r, R);
+                    const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
                     posCurrentVec = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
                 } else {
-                    const rightPrecessed = getSRightPrecessed(animationTime, spinDirection, r, R, precession);
+                    const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
                     posCurrentVec = new THREE.Vector3(rightPrecessed.x, rightPrecessed.y, rightPrecessed.z);
                 }
             }
@@ -2651,19 +2688,19 @@ function init() {
             if (onLeft) {
                 // Left track: use new precession functions
                 if (precession === 0) {
-                    const leftBaseNext = getSLeftBase(animationTime + dt, spinDirection, r, R);
+                    const leftBaseNext = getSLeftBase(animationTime + dt, toroidalChirality, r, R);
                     posNextVec = new THREE.Vector3(leftBaseNext.x0, leftBaseNext.y0, leftBaseNext.z0);
                 } else {
-                    const leftPrecessedNext = getSLeftPrecessed(animationTime + dt, spinDirection, r, R, precession);
+                    const leftPrecessedNext = getSLeftPrecessed(animationTime + dt, toroidalChirality, r, R, precession);
                     posNextVec = new THREE.Vector3(leftPrecessedNext.x, leftPrecessedNext.y, leftPrecessedNext.z);
                 }
             } else {
                 // Right track: use new precession functions
                 if (precession === 0) {
-                    const rightBaseNext = getSRightBase(animationTime + dt, spinDirection, r, R);
+                    const rightBaseNext = getSRightBase(animationTime + dt, toroidalChirality, r, R);
                     posNextVec = new THREE.Vector3(rightBaseNext.x0, rightBaseNext.y0, rightBaseNext.z0);
                 } else {
-                    const rightPrecessedNext = getSRightPrecessed(animationTime + dt, spinDirection, r, R, precession);
+                    const rightPrecessedNext = getSRightPrecessed(animationTime + dt, toroidalChirality, r, R, precession);
                     posNextVec = new THREE.Vector3(rightPrecessedNext.x, rightPrecessedNext.y, rightPrecessedNext.z);
                 }
             }
@@ -2777,8 +2814,8 @@ function init() {
                 uToroidal = 2 * Math.PI;
                 vPoloidal = 4 * Math.PI;
             }
-            const u = animationTime * uToroidal * (1 + precession) * spinDirection;
-            const v = animationTime * vPoloidal * (1 + precession * 2) * spinDirection;
+            const u = animationTime * uToroidal * (1 + precession) * toroidalChirality;
+            const v = animationTime * vPoloidal * (1 + precession * 2) * poloidalChirality;
             
             // Calculate tangent vectors
             // r_φ = ∂r/∂φ = (-(R+r cos θ) sin φ, (R+r cos θ) cos φ, 0)
@@ -2798,11 +2835,11 @@ function init() {
             // Time derivatives (angular velocities)
             let phi_dot, theta_dot;
             if (windingRatio === '1:2') {
-                phi_dot = 1.0 * (1 + precession) * spinDirection;
-                theta_dot = 0.5 * (1 + precession * 2) * spinDirection;
+                phi_dot = 1.0 * (1 + precession) * toroidalChirality;
+                theta_dot = 0.5 * (1 + precession * 2) * poloidalChirality;
             } else {
-                phi_dot = 1.0 * (1 + precession) * spinDirection;
-                theta_dot = 2.0 * (1 + precession * 2) * spinDirection;
+                phi_dot = 1.0 * (1 + precession) * toroidalChirality;
+                theta_dot = 2.0 * (1 + precession * 2) * poloidalChirality;
             }
             
             // Velocities in model units
@@ -2957,13 +2994,13 @@ function init() {
                 let uNormalized; // For right track calculation
                 if (precession === 0) {
                     // No precession: use base left curve
-                    const leftBase = getSLeftBase(animationTime, spinDirection, r, R);
+                    const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
                     uNormalized = leftBase.uNormalized;
                     showLeftTrack = uNormalized >= 2 * Math.PI;
                     leftPosition = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
                 } else {
                     // With precession: use precessed left curve
-                    const leftPrecessed = getSLeftPrecessed(animationTime, spinDirection, r, R, precession);
+                    const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
                     // Only draw left loop when uNormalized in [2π, 4π)
                     uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
                     showLeftTrack = uNormalized >= 2 * Math.PI;
@@ -2982,14 +3019,14 @@ function init() {
                 let showRightTrack;
                 if (precession === 0) {
                     // No precession: use base right curve
-                    const rightBase = getSRightBase(animationTime, spinDirection, r, R);
+                    const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
                     // Right visible when uS < 2π (complement of left's range)
                     const uS = rightBase.uNormalized;
                     showRightTrack = uS < 2 * Math.PI;
                     rightPosition = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
                 } else {
                     // With precession: use precessed right curve
-                    const rightPrecessed = getSRightPrecessed(animationTime, spinDirection, r, R, precession);
+                    const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
                     // Right visible when uS < 2π (complement of left's range)
                     const uS = rightPrecessed.multiPhase % (4 * Math.PI);
                     showRightTrack = uS < 2 * Math.PI;
@@ -3132,7 +3169,7 @@ function init() {
             
             // Calculate current toroidal angle WITH precession (matches actual path calculation)
             // This must match how the position is calculated in getTorusPosition/getPhotonPosition
-            const currentToroidalAngleLoop = animationTime * uToroidalPerRotationLoop * (1 + precession) * spinDirection;
+            const currentToroidalAngleLoop = animationTime * uToroidalPerRotationLoop * (1 + precession) * toroidalChirality;
             
             // Initialize angleAtCycleStart on first frame if needed
             if (momentumSampleCount === 0 && angleAtCycleStart === 0 && currentToroidalAngleLoop !== 0) {
@@ -3142,7 +3179,7 @@ function init() {
             // Detect loop completion: when toroidal angle has increased by one full base cycle
             // A full cycle is uToroidalPerRotationLoop radians (the base cycle length, without precession factor)
             // We track the angle WITH precession, but detect completion when it has increased by the base cycle length
-            const angleDelta = spinDirection > 0 ? 
+            const angleDelta = toroidalChirality > 0 ? 
                 (currentToroidalAngleLoop - angleAtCycleStart) : 
                 (angleAtCycleStart - currentToroidalAngleLoop);
             
@@ -3237,15 +3274,15 @@ function init() {
             if (pathMode === 'lemniscate-c') {
                 // C-type (Viviani curve): completes one cycle in 2π parameter range
                 // Track using 4π for consistency with S-type, but gradient should span 2π
-                currentToroidalAngle = animationTime * 4 * Math.PI * spinDirection;
+                currentToroidalAngle = animationTime * 4 * Math.PI * toroidalChirality;
                 baseCycleLength = 2 * Math.PI; // Actual curve cycle is 2π
             } else if (pathMode === 'lemniscate-s') {
                 // S-type: uses 4π for the major path
-                currentToroidalAngle = animationTime * 4 * Math.PI * spinDirection;
+                currentToroidalAngle = animationTime * 4 * Math.PI * toroidalChirality;
                 baseCycleLength = 4 * Math.PI; // Full cycle is 4π
             } else {
                 // For torus: use the standard calculation
-                currentToroidalAngle = animationTime * uToroidalPerRotation * spinDirection;
+                currentToroidalAngle = animationTime * uToroidalPerRotation * toroidalChirality;
                 // Torus cycle length depends on winding ratio
                 baseCycleLength = uToroidalPerRotation; // 4π for 1:2, 2π for 2:1
             }
@@ -3295,14 +3332,14 @@ function init() {
                 let showLeftTrail;
                 if (precession === 0) {
                     // No precession: use base left curve
-                    const leftBase = getSLeftBase(animationTime, spinDirection, r, R);
+                    const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
                     showLeftTrail = leftBase.uNormalized >= 2 * Math.PI;
                     if (showLeftTrail) {
                         leftPoint = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
                     }
                 } else {
                     // With precession: use precessed left curve
-                    const leftPrecessed = getSLeftPrecessed(animationTime, spinDirection, r, R, precession);
+                    const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
                     // Only draw left loop when uNormalized in [2π, 4π)
                     const uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
                     showLeftTrail = uNormalized >= 2 * Math.PI;
@@ -3328,7 +3365,7 @@ function init() {
                 let showRightTrail;
                 if (precession === 0) {
                     // No precession: use base right curve
-                    const rightBase = getSRightBase(animationTime, spinDirection, r, R);
+                    const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
                     // Right visible when uS < 2π (complement of left's range)
                     const uS = rightBase.uNormalized;
                     showRightTrail = uS < 2 * Math.PI;
@@ -3337,7 +3374,7 @@ function init() {
                     }
                 } else {
                     // With precession: use precessed right curve
-                    const rightPrecessed = getSRightPrecessed(animationTime, spinDirection, r, R, precession);
+                    const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
                     // Right visible when uS < 2π (complement of left's range)
                     const uS = rightPrecessed.multiPhase % (4 * Math.PI);
                     showRightTrail = uS < 2 * Math.PI;

@@ -333,8 +333,8 @@
             <div class="control-group">
                 <label>Spin Direction</label>
                 <select id="spinDirection" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
-                    <option value="-1" selected>Forward</option>
-                    <option value="1">Reverse</option>
+                    <option value="-1" selected>Spin Up</option>
+                    <option value="1">Spin Down</option>
                 </select>
             </div>
             
@@ -417,7 +417,7 @@
             
             <div style="line-height: 1.6;">
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Overview</h3>
-                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along closed paths. The model supports three path geometries: a torus (donut), and two lemniscate (figure-8) curves based on Viviani's curve. The model shows how a photon's trajectory can give rise to particle-like properties.</p>
+                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along closed paths. The model supports three path geometries: the original WVdM torus (donut), and two extensions using lemniscate (figure-8) curves based on Viviani's curve. The model shows how a photon's trajectory can give rise to particle-like properties.</p>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Controls</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
@@ -443,7 +443,7 @@
                         Changing path mode clears the track.</li>
                     <li><strong>Particle Type:</strong> Select between Electron and Positron (affects electric field direction)</li>
                     <li><strong>Winding Ratio:</strong> (Torus mode only) Select between 1:2 (default) and 2:1 winding modes (different toroidal/poloidal path ratios). Changing winding ratio clears the track.</li>
-                    <li><strong>Spin Direction:</strong> Select Forward (clockwise) or Reverse (counter-clockwise) direction of photon motion. Changing spin direction clears the track.</li>
+                    <li><strong>Spin Direction:</strong> Select Spin Up or Spin Down. Controls poloidal chirality (the direction of motion around the minor circle/circular polarization). Does not affect toroidal motion direction (controlled by particle type) or electric field direction (controlled by particle type). Changing spin direction clears the track.</li>
                     <li><strong>Transparency:</strong> Controls the opacity of the torus/spheroids (0 = solid, 1 = invisible). Wireframe option available in torus mode only.</li>
                     <li><strong>Show Wireframe:</strong> Toggles the wireframe mesh visibility (torus mode only)</li>
                     <li><strong>Inner Radius (relative)</strong> / <strong>Minor Axis (relative):</strong> 
@@ -487,7 +487,7 @@
                             <li><strong>Torus/C curve:</strong> Single continuous track</li>
                             <li><strong>S curve:</strong> Two alternating tracks (left visible when u ∈ [2π, 4π], right visible when u ∈ [0, 2π])</li>
                         </ul>
-                        Displays a temperature-like color gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest). The gradient spans one full cycle of the path and reverses direction when Spin Direction is set to Reverse. Shown in brighter color when unobstructed, darker when behind geometry (torus mode).</li>
+                        Displays a temperature-like color gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest). The gradient spans one full cycle of the path. Gradient direction is determined by particle type (electron vs positron), not spin direction. Shown in brighter color when unobstructed, darker when behind geometry (torus mode).</li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Field and Momentum Displays</h3>

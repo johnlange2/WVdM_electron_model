@@ -13,7 +13,7 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
 - **Photon animation**: Visual representation of the photon moving along the selected path
 - **Photon Speed control**: Logarithmic scale from 0.1 to 10 (default 1.0)
 - **Trail visualization**: Configurable trail length in toroidal rotations (0.1 to unlimited)
-- **Track color gradient**: The photon's track displays a temperature-like color gradient from white (newest) through light yellow, yellow, bright red, red, to dark red (oldest). The gradient direction reverses when spin direction is set to Reverse.
+- **Track color gradient**: The photon's track displays a temperature-like color gradient from white (newest) through light yellow, yellow, bright red, red, to dark red (oldest). The gradient direction is determined by particle type (electron vs positron), not spin direction.
 - **Precession effect**: Spirograph-like precession pattern for both C and S curves:
   - **C curve**: Rotating E/M fields create spirograph patterns
   - **S curve**: Both left and right loops rotate independently, creating interleaved patterns
@@ -21,7 +21,7 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
   - Pattern closes after total length L = 4π/p
 - **Particle type selection**: Switch between Electron and Positron (affects electric field direction)
 - **Winding ratio modes**: Choose between 1:2 (4π toroidal, 2π poloidal) and 2:1 (2π toroidal, 4π poloidal) winding (torus mode only; figure-8 mode uses 4π path equivalent to 2:1)
-- **Spin direction**: Forward (clockwise) or Reverse (counter-clockwise)
+- **Spin direction**: Spin Up or Spin Down (controls poloidal chirality/circular polarization only, not toroidal motion direction)
 - **Interactive camera**: Real-time 3D perspective adjustment with mouse controls
 - **Field vectors**: Visual display of Electric (green) and Magnetic (blue) field vectors at the photon position
 - **Field vectors display**: Shows instantaneous and average (per cycle) electric and magnetic field vectors with reset capability
@@ -74,7 +74,7 @@ Then open `http://localhost:8000` in your browser.
 - **Winding Ratio**: (Only available in Torus mode)
   - **1:2** (default): 4π toroidal, 2π poloidal (clears track when changed)
   - **2:1**: 2π toroidal, 4π poloidal (clears track when changed)
-- **Spin Direction**: Forward (clockwise) or Reverse (counter-clockwise) (clears track when changed)
+- **Spin Direction**: Spin Up or Spin Down (controls poloidal chirality - the direction of motion around the minor circle/circular polarization). Does not affect toroidal motion direction (controlled by particle type) or electric field direction (controlled by particle type). Clears track when changed.
 - **Transparency**: Adjust the opacity of the torus (0 = solid, 1 = invisible)
 - **Show Wireframe**: Toggle wireframe mesh visibility
 - **Inner Radius (relative)** / **Minor Axis (relative)**: 
@@ -90,7 +90,7 @@ Then open `http://localhost:8000` in your browser.
   - 1 = one full track (4π for 1:2 winding, 2π for 2:1 winding)
   - Logarithmic scale from 0.1 (left) to 1.0 (middle) to 100 (right, unlimited)
   - The track displays a color gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest)
-  - Gradient direction reverses when Spin Direction is set to Reverse
+  - Gradient direction is determined by particle type (electron vs positron), not spin direction
 - **Precession (try values <= 0.5, e.g. 0.1)**: Adds a spirograph-like precession effect
   - **C curve**: Rotating E/M fields create continuous spirograph patterns
   - **S curve**: Both left and right loops rotate independently around Y-axis
@@ -129,6 +129,18 @@ The visualization uses:
 - **Real-time updates**: All parameters update the visualization instantly
 - **Raycasting**: Detects when the photon is obstructed by the torus for visual feedback
 - **Vector calculations**: Computes electric and magnetic field vectors, velocity, and momentum in real-time
+
+### Chirality and Spin Separation
+
+The model properly separates charge/chirality from spin:
+- **Particle Type (Electron/Positron)**: Controls:
+  - **Toroidal chirality**: Direction of motion around the major toroidal circle (z-axis)
+    - Electron: Left-handed (counter-clockwise when viewed from +z)
+    - Positron: Right-handed (clockwise when viewed from +z)
+  - **Electric field direction**: Inward for electron (negative charge), outward for positron (positive charge)
+- **Spin Direction (Spin Up/Spin Down)**: Controls:
+  - **Poloidal chirality**: Direction of motion around the minor circle (circular polarization)
+  - Does NOT affect toroidal motion direction or electric field direction
 
 ### Trail Length Calculation
 
