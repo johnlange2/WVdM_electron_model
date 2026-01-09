@@ -58,7 +58,7 @@ function init() {
     // Torus parameters
     let innerRadius = 1.5;
     let outerRadius = 3.0;
-    let transparency = 0.5;
+    let opacity = 0.5;
     let photonSpeed = 1.0; // Default photon speed (logarithmic scale: 0 slider = 1.0, 1 slider = 10.0)
 
     // Create torus geometry and material
@@ -71,7 +71,7 @@ function init() {
     const torusMaterial = new THREE.MeshStandardMaterial({
         color: 0x89b4fa,
         transparent: true,
-        opacity: 1 - transparency,
+        opacity: opacity,
         side: THREE.DoubleSide,
         roughness: 0.3,
         metalness: 0.7
@@ -90,7 +90,7 @@ function init() {
         color: 0x74c7ec,
         wireframe: true,
         transparent: true,
-        opacity: 0.2 * (1 - transparency) // Will be updated when transparency changes
+        opacity: opacity < 1 ? 0.2 * opacity : 0 // Will be updated when opacity changes
     });
     const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
     wireframe.visible = false; // Hidden by default
@@ -107,7 +107,7 @@ function init() {
     const spheroidMaterial = new THREE.MeshStandardMaterial({
         color: 0x89b4fa,
         transparent: true,
-        opacity: 1 - transparency,
+        opacity: opacity,
         side: THREE.DoubleSide,
         roughness: 0.3,
         metalness: 0.7
@@ -123,7 +123,7 @@ function init() {
         color: 0x74c7ec,
         wireframe: true,
         transparent: true,
-        opacity: 0.2 * (1 - transparency) // Will be updated when transparency changes
+        opacity: opacity < 1 ? 0.2 * opacity : 0 // Will be updated when opacity changes
     });
     const spheroidWireframe = new THREE.Mesh(spheroidWireframeGeometry, spheroidWireframeMaterial);
     spheroidWireframe.visible = false; // Hidden by default
@@ -134,7 +134,7 @@ function init() {
     const spheroidS1Material = new THREE.MeshStandardMaterial({
         color: 0x89b4fa,
         transparent: true,
-        opacity: 1 - transparency,
+        opacity: opacity,
         side: THREE.DoubleSide,
         roughness: 0.3,
         metalness: 0.7
@@ -147,7 +147,7 @@ function init() {
     const spheroidS2Material = new THREE.MeshStandardMaterial({
         color: 0x89b4fa,
         transparent: true,
-        opacity: 1 - transparency,
+        opacity: opacity,
         side: THREE.DoubleSide,
         roughness: 0.3,
         metalness: 0.7
@@ -162,7 +162,7 @@ function init() {
         color: 0x74c7ec,
         wireframe: true,
         transparent: true,
-        opacity: 0.2 * (1 - transparency)
+        opacity: opacity < 1 ? 0.2 * opacity : 0
     });
     const spheroidS1Wireframe = new THREE.Mesh(spheroidS1WireframeGeometry, spheroidS1WireframeMaterial);
     spheroidS1Wireframe.visible = false;
@@ -173,19 +173,264 @@ function init() {
         color: 0x74c7ec,
         wireframe: true,
         transparent: true,
-        opacity: 0.2 * (1 - transparency)
+        opacity: opacity < 1 ? 0.2 * opacity : 0
     });
     const spheroidS2Wireframe = new THREE.Mesh(spheroidS2WireframeGeometry, spheroidS2WireframeMaterial);
     spheroidS2Wireframe.visible = false;
     scene.add(spheroidS2Wireframe);
+    
+    // Additional toruses for multiple orientations
+    // Torus 2: X as primary axis
+    let torus2Geometry = new THREE.TorusGeometry(
+        (innerRadius + outerRadius) / 2,
+        (outerRadius - innerRadius) / 2,
+        32,
+        64
+    );
+    const torus2Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const torus2 = new THREE.Mesh(torus2Geometry, torus2Material);
+    torus2.visible = false;
+    scene.add(torus2);
+    
+    // Rotate torus2 so X is primary axis (rotate 90 degrees around Y axis)
+    // Original torus wraps around Z, we want it to wrap around X
+    // Rotation: 90° around Y axis (Z→X, X→-Z, Y→Y)
+    torus2.rotation.y = Math.PI / 2;
+    
+    const wireframe2Geometry = new THREE.TorusGeometry(
+        (innerRadius + outerRadius) / 2,
+        (outerRadius - innerRadius) / 2,
+        32,
+        64
+    );
+    const wireframe2Material = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const wireframe2 = new THREE.Mesh(wireframe2Geometry, wireframe2Material);
+    wireframe2.visible = false;
+    wireframe2.rotation.y = Math.PI / 2;
+    scene.add(wireframe2);
+    
+    // Torus 3: Y as primary axis
+    let torus3Geometry = new THREE.TorusGeometry(
+        (innerRadius + outerRadius) / 2,
+        (outerRadius - innerRadius) / 2,
+        32,
+        64
+    );
+    const torus3Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const torus3 = new THREE.Mesh(torus3Geometry, torus3Material);
+    torus3.visible = false;
+    scene.add(torus3);
+    
+    // Rotate torus3 so Y is primary axis (rotate -90 degrees around X axis)
+    // Original torus wraps around Z, we want it to wrap around Y
+    // Rotation: -90° around X axis (Z→Y, Y→-Z, X→X)
+    torus3.rotation.x = -Math.PI / 2;
+    
+    const wireframe3Geometry = new THREE.TorusGeometry(
+        (innerRadius + outerRadius) / 2,
+        (outerRadius - innerRadius) / 2,
+        32,
+        64
+    );
+    const wireframe3Material = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const wireframe3 = new THREE.Mesh(wireframe3Geometry, wireframe3Material);
+    wireframe3.visible = false;
+    wireframe3.rotation.x = -Math.PI / 2;
+    scene.add(wireframe3);
+    
+    // Additional spheroids for C curve multiple orientations
+    // Spheroid 2: X as major axis
+    let spheroid2Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroid2Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroid2 = new THREE.Mesh(spheroid2Geometry, spheroid2Material);
+    spheroid2.visible = false;
+    scene.add(spheroid2);
+    
+    let spheroid2WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroid2WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroid2Wireframe = new THREE.Mesh(spheroid2WireframeGeometry, spheroid2WireframeMaterial);
+    spheroid2Wireframe.visible = false;
+    scene.add(spheroid2Wireframe);
+    
+    // Spheroid 3: Z as major axis
+    let spheroid3Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroid3Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroid3 = new THREE.Mesh(spheroid3Geometry, spheroid3Material);
+    spheroid3.visible = false;
+    scene.add(spheroid3);
+    
+    let spheroid3WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroid3WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroid3Wireframe = new THREE.Mesh(spheroid3WireframeGeometry, spheroid3WireframeMaterial);
+    spheroid3Wireframe.visible = false;
+    scene.add(spheroid3Wireframe);
+    
+    // Additional S-type spheroids for multiple orientations
+    // Orientation 2: Spheroids along Y axis, Z as major axis
+    let spheroidS1_2Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS1_2Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroidS1_2 = new THREE.Mesh(spheroidS1_2Geometry, spheroidS1_2Material);
+    spheroidS1_2.visible = false;
+    scene.add(spheroidS1_2);
+    
+    let spheroidS2_2Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS2_2Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroidS2_2 = new THREE.Mesh(spheroidS2_2Geometry, spheroidS2_2Material);
+    spheroidS2_2.visible = false;
+    scene.add(spheroidS2_2);
+    
+    let spheroidS1_2WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS1_2WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroidS1_2Wireframe = new THREE.Mesh(spheroidS1_2WireframeGeometry, spheroidS1_2WireframeMaterial);
+    spheroidS1_2Wireframe.visible = false;
+    scene.add(spheroidS1_2Wireframe);
+    
+    let spheroidS2_2WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS2_2WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroidS2_2Wireframe = new THREE.Mesh(spheroidS2_2WireframeGeometry, spheroidS2_2WireframeMaterial);
+    spheroidS2_2Wireframe.visible = false;
+    scene.add(spheroidS2_2Wireframe);
+    
+    // Orientation 3: Spheroids along Z axis, X as major axis
+    let spheroidS1_3Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS1_3Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroidS1_3 = new THREE.Mesh(spheroidS1_3Geometry, spheroidS1_3Material);
+    spheroidS1_3.visible = false;
+    scene.add(spheroidS1_3);
+    
+    let spheroidS2_3Geometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS2_3Material = new THREE.MeshStandardMaterial({
+        color: 0x89b4fa,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.7
+    });
+    const spheroidS2_3 = new THREE.Mesh(spheroidS2_3Geometry, spheroidS2_3Material);
+    spheroidS2_3.visible = false;
+    scene.add(spheroidS2_3);
+    
+    let spheroidS1_3WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS1_3WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroidS1_3Wireframe = new THREE.Mesh(spheroidS1_3WireframeGeometry, spheroidS1_3WireframeMaterial);
+    spheroidS1_3Wireframe.visible = false;
+    scene.add(spheroidS1_3Wireframe);
+    
+    let spheroidS2_3WireframeGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const spheroidS2_3WireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x74c7ec,
+        wireframe: true,
+        transparent: true,
+        opacity: opacity < 1 ? 0.2 * opacity : 0
+    });
+    const spheroidS2_3Wireframe = new THREE.Mesh(spheroidS2_3WireframeGeometry, spheroidS2_3WireframeMaterial);
+    spheroidS2_3Wireframe.visible = false;
+    scene.add(spheroidS2_3Wireframe);
 
+    // Photon colors - defined before photon creation
+    const photon1ColorVisible = 0xff6b6b; // Bright red (for numberOfPhotons = 1)
+    const photon1ColorObstructed = 0xcc0000; // Dark red (for numberOfPhotons = 1)
+    
+    // Colors for multiple photons
+    const photonMagentaColorVisible = 0xff00ff; // Bright magenta (photon 1 when numberOfPhotons >= 2)
+    const photonMagentaColorObstructed = 0x800080; // Dark magenta (photon 1 when numberOfPhotons >= 2)
+    const photonYellowGreenColorVisible = 0x80ff00; // Bright yellow/green (photon 2 when numberOfPhotons >= 2)
+    const photonYellowGreenColorObstructed = 0x408000; // Dark yellow/green (photon 2 when numberOfPhotons >= 2)
+    const photonCyanColorVisible = 0x00ffff; // Bright cyan (photon 3 when numberOfPhotons = 3)
+    const photonCyanColorObstructed = 0x008080; // Dark cyan (photon 3 when numberOfPhotons = 3)
+    
     // Photon particle - size will be scaled based on torus size
     let photonBaseSize = 0.10;
     let photonGlowBaseSize = 0.15;
     const photonGeometry = new THREE.SphereGeometry(photonBaseSize, 16, 16);
     const photonMaterial = new THREE.MeshStandardMaterial({
-        color: 0xff6b6b,
-        emissive: 0xff6b6b,
+        color: photon1ColorVisible,
+        emissive: photon1ColorVisible,
         emissiveIntensity: 1.0
     });
     const photon = new THREE.Mesh(photonGeometry, photonMaterial);
@@ -194,7 +439,7 @@ function init() {
     // Add glow effect to photon
     const photonGlowGeometry = new THREE.SphereGeometry(photonGlowBaseSize, 16, 16);
     const photonGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff6b6b,
+        color: photon1ColorVisible,
         transparent: true,
         opacity: 0.3
     });
@@ -203,13 +448,13 @@ function init() {
     
     // Second photon for S-type right track
     const photon2Material = new THREE.MeshStandardMaterial({
-        color: 0xff6b6b,
-        emissive: 0xff6b6b,
+        color: photon1ColorVisible,
+        emissive: photon1ColorVisible,
         transparent: true,
         opacity: 0.9
     });
     const photon2GlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff6b6b,
+        color: photon1ColorVisible,
         transparent: true,
         opacity: 0.3
     });
@@ -218,6 +463,78 @@ function init() {
     photon2.add(photon2Glow);
     photon2.visible = false; // Hidden by default, shown only for S-type
     scene.add(photon2);
+    
+    // Third photon for multiple orientations (photon 2 or 3 depending on mode)
+    const photon3Material = new THREE.MeshStandardMaterial({
+        color: photonYellowGreenColorVisible,
+        emissive: photonYellowGreenColorVisible,
+        transparent: true,
+        opacity: 0.9
+    });
+    const photon3GlowMaterial = new THREE.MeshBasicMaterial({
+        color: photonYellowGreenColorVisible,
+        transparent: true,
+        opacity: 0.3
+    });
+    const photon3 = new THREE.Mesh(photonGeometry, photon3Material);
+    const photon3Glow = new THREE.Mesh(photonGlowGeometry, photon3GlowMaterial);
+    photon3.add(photon3Glow);
+    photon3.visible = false; // Hidden by default
+    scene.add(photon3);
+    
+    // Fourth photon for S-type with multiple orientations (photon 3 in S curve mode)
+    const photon4Material = new THREE.MeshStandardMaterial({
+        color: photonCyanColorVisible,
+        emissive: photonCyanColorVisible,
+        transparent: true,
+        opacity: 0.9
+    });
+    const photon4GlowMaterial = new THREE.MeshBasicMaterial({
+        color: photonCyanColorVisible,
+        transparent: true,
+        opacity: 0.3
+    });
+    const photon4 = new THREE.Mesh(photonGeometry, photon4Material);
+    const photon4Glow = new THREE.Mesh(photonGlowGeometry, photon4GlowMaterial);
+    photon4.add(photon4Glow);
+    photon4.visible = false; // Hidden by default
+    scene.add(photon4);
+    
+    // Fifth photon for S-type with 3 orientations (photon 2, right track, orientation 2)
+    const photon5Material = new THREE.MeshStandardMaterial({
+        color: photonYellowGreenColorVisible,
+        emissive: photonYellowGreenColorVisible,
+        transparent: true,
+        opacity: 0.9
+    });
+    const photon5GlowMaterial = new THREE.MeshBasicMaterial({
+        color: photonYellowGreenColorVisible,
+        transparent: true,
+        opacity: 0.3
+    });
+    const photon5 = new THREE.Mesh(photonGeometry, photon5Material);
+    const photon5Glow = new THREE.Mesh(photonGlowGeometry, photon5GlowMaterial);
+    photon5.add(photon5Glow);
+    photon5.visible = false; // Hidden by default
+    scene.add(photon5);
+    
+    // Sixth photon for S-type with 3 orientations (photon 3, right track, orientation 3)
+    const photon6Material = new THREE.MeshStandardMaterial({
+        color: photonCyanColorVisible,
+        emissive: photonCyanColorVisible,
+        transparent: true,
+        opacity: 0.9
+    });
+    const photon6GlowMaterial = new THREE.MeshBasicMaterial({
+        color: photonCyanColorVisible,
+        transparent: true,
+        opacity: 0.3
+    });
+    const photon6 = new THREE.Mesh(photonGeometry, photon6Material);
+    const photon6Glow = new THREE.Mesh(photonGlowGeometry, photon6GlowMaterial);
+    photon6.add(photon6Glow);
+    photon6.visible = false; // Hidden by default
+    scene.add(photon6);
 
     // Trail for photon path - visible even behind torus
     const trailGeometry = new THREE.BufferGeometry();
@@ -257,9 +574,93 @@ function init() {
     trail2.renderOrder = 1000; // Render trails on top to ensure visibility
     scene.add(trail2);
     
-    // Pre-calculated gradient color table (128 colors: white → light yellow → yellow → bright red → red → dark red)
-    // Index 0 = white (newest), Index 127 = dark red (oldest)
+    // Additional trails for multiple photons
+    // Trail 3: for photon 2 in torus/C curve, or photon 2 left in S curve
+    const trailGeometry3 = new THREE.BufferGeometry();
+    const trailMaterial3 = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const trailPoints3 = [];
+    const trailColorIndices3 = [];
+    const trailObstructionFlags3 = [];
+    const trailOriginalIndices3 = [];
+    const trailToroidalAngles3 = [];
+    const trail3 = new THREE.Line(trailGeometry3, trailMaterial3);
+    trail3.renderOrder = 1000;
+    trail3.visible = false;
+    scene.add(trail3);
+    
+    // Trail 4: for photon 3 in torus/C curve, or photon 2 right in S curve
+    const trailGeometry4 = new THREE.BufferGeometry();
+    const trailMaterial4 = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const trailPoints4 = [];
+    const trailColorIndices4 = [];
+    const trailObstructionFlags4 = [];
+    const trailOriginalIndices4 = [];
+    const trailToroidalAngles4 = [];
+    const trail4 = new THREE.Line(trailGeometry4, trailMaterial4);
+    trail4.renderOrder = 1000;
+    trail4.visible = false;
+    scene.add(trail4);
+    
+    // Trail 5: for photon 3 left in S curve
+    const trailGeometry5 = new THREE.BufferGeometry();
+    const trailMaterial5 = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const trailPoints5 = [];
+    const trailColorIndices5 = [];
+    const trailObstructionFlags5 = [];
+    const trailOriginalIndices5 = [];
+    const trailToroidalAngles5 = [];
+    const trail5 = new THREE.Line(trailGeometry5, trailMaterial5);
+    trail5.renderOrder = 1000;
+    trail5.visible = false;
+    scene.add(trail5);
+    
+    // Trail 6: for photon 3 right in S curve
+    const trailGeometry6 = new THREE.BufferGeometry();
+    const trailMaterial6 = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const trailPoints6 = [];
+    const trailColorIndices6 = [];
+    const trailObstructionFlags6 = [];
+    const trailOriginalIndices6 = [];
+    const trailToroidalAngles6 = [];
+    const trail6 = new THREE.Line(trailGeometry6, trailMaterial6);
+    trail6.renderOrder = 1000;
+    trail6.visible = false;
+    scene.add(trail6);
+    
+    // Pre-calculated gradient color tables (128 colors each)
+    // Index 0 = brightest (newest), Index 127 = darkest (oldest)
     const GRADIENT_TABLE_SIZE = 128;
+    
+    // Original gradient color table (white → light yellow → yellow → bright red → red → dark red)
+    // Used for Number of Photons = 1
     const gradientColorTable = [];
     for (let i = 0; i < GRADIENT_TABLE_SIZE; i++) {
         // Build from white to dark red: i=0 → white, i=127 → dark red
@@ -303,6 +704,111 @@ function init() {
         gradientColorTable.push(new THREE.Color(r, g, b));
     }
     
+    // Gradient color table 1: Magenta (for photon 1 when numberOfPhotons >= 2)
+    // pure magenta → dark magenta
+    const gradientColorTable1 = [];
+    for (let i = 0; i < GRADIENT_TABLE_SIZE; i++) {
+        const t = i / (GRADIENT_TABLE_SIZE - 1); // 0 to 1
+        let r, g, b;
+        
+        if (t < 0.3) {
+            // Pure Magenta (intense) - keep bright longer
+            r = 1;
+            g = 0;
+            b = 1;
+        } else if (t < 0.5) {
+            // Magenta to Slightly Darker Magenta
+            const localT = (t - 0.3) / 0.2;
+            r = 1;
+            g = 0;
+            b = 1;
+        } else if (t < 0.75) {
+            // Magenta to Medium Magenta
+            const localT = (t - 0.5) / 0.25;
+            r = 1 - localT * 0.3; // 1.0 → 0.7
+            g = localT * 0.1;     // 0.0 → 0.1
+            b = 1 - localT * 0.3; // 1.0 → 0.7
+        } else {
+            // Medium Magenta to Dark Magenta - make darker
+            const localT = (t - 0.75) / 0.25;
+            r = 0.7 - localT * 0.55; // 0.7 → 0.15 (darker)
+            g = 0.1 + localT * 0.05; // 0.1 → 0.15
+            b = 0.7 - localT * 0.55; // 0.7 → 0.15 (darker)
+        }
+        
+        gradientColorTable1.push(new THREE.Color(r, g, b));
+    }
+    
+    // Gradient color table 2: Yellow/Green (for photon 2 when numberOfPhotons >= 2)
+    // pure yellow/green → dark green
+    const gradientColorTable2 = [];
+    for (let i = 0; i < GRADIENT_TABLE_SIZE; i++) {
+        const t = i / (GRADIENT_TABLE_SIZE - 1); // 0 to 1
+        let r, g, b;
+        
+        if (t < 0.3) {
+            // Pure Yellow/Green (intense) - make brighter and keep bright longer
+            r = 0.7;  // Yellow component - brighter
+            g = 1;    // Full green
+            b = 0;    // No blue
+        } else if (t < 0.5) {
+            // Yellow/Green to Green
+            const localT = (t - 0.3) / 0.2;
+            r = 0.7 - localT * 0.7; // 0.7 → 0.0
+            g = 1;
+            b = 0;
+        } else if (t < 0.75) {
+            // Green to Medium Green
+            const localT = (t - 0.5) / 0.25;
+            r = 0;
+            g = 1 - localT * 0.3; // 1.0 → 0.7
+            b = 0;
+        } else {
+            // Medium Green to Dark Green - make darker
+            const localT = (t - 0.75) / 0.25;
+            r = localT * 0.03;     // 0.0 → 0.03 (darker)
+            g = 0.7 - localT * 0.55; // 0.7 → 0.15 (darker)
+            b = localT * 0.03;     // 0.0 → 0.03 (darker)
+        }
+        
+        gradientColorTable2.push(new THREE.Color(r, g, b));
+    }
+    
+    // Gradient color table 3: Cyan (for photon 3 when numberOfPhotons >= 2)
+    // pure cyan → dark cyan
+    const gradientColorTable3 = [];
+    for (let i = 0; i < GRADIENT_TABLE_SIZE; i++) {
+        const t = i / (GRADIENT_TABLE_SIZE - 1); // 0 to 1
+        let r, g, b;
+        
+        if (t < 0.3) {
+            // Pure Cyan (intense) - keep bright longer
+            r = 0;
+            g = 1;
+            b = 1;
+        } else if (t < 0.5) {
+            // Cyan to Slightly Darker Cyan
+            const localT = (t - 0.3) / 0.2;
+            r = 0;
+            g = 1;
+            b = 1;
+        } else if (t < 0.75) {
+            // Cyan to Medium Cyan
+            const localT = (t - 0.5) / 0.25;
+            r = localT * 0.1;     // 0.0 → 0.1
+            g = 1 - localT * 0.3; // 1.0 → 0.7
+            b = 1 - localT * 0.3; // 1.0 → 0.7
+        } else {
+            // Medium Cyan to Dark Cyan - make darker
+            const localT = (t - 0.75) / 0.25;
+            r = 0.1 + localT * 0.05; // 0.1 → 0.15
+            g = 0.7 - localT * 0.55; // 0.7 → 0.15 (darker)
+            b = 0.7 - localT * 0.55; // 0.7 → 0.15 (darker)
+        }
+        
+        gradientColorTable3.push(new THREE.Color(r, g, b));
+    }
+    
     // Function to get color index from angle difference
     // Gradient table: index 0 = white, index 127 = dark red
     // For forward spin: newest = white (index 0), oldest = dark red (index 127) - current behavior works perfectly
@@ -344,14 +850,16 @@ function init() {
         trailGeometry.setFromPoints(points);
         
         // Set vertex colors by mapping indices to gradient table
+        // Use original table for single photon, magenta table for multiple photons
+        const colorTable = numberOfPhotons === 1 ? gradientColorTable : gradientColorTable1;
         const colorArray = new Float32Array(points.length * 3);
         for (let i = 0; i < points.length; i++) {
             const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
-            let color = gradientColorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            let color = colorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
             
             // Apply obstruction darkening
             if (obstructionFlags && obstructionFlags[i]) {
-                if (transparency === 0) {
+                if (opacity === 1) {
                     color.multiplyScalar(0.1);
                 } else {
                     color.multiplyScalar(0.6);
@@ -366,7 +874,7 @@ function init() {
         trailGeometry.setIndex(null);
     }
     
-    // Helper function to update trail2 geometry (for right spheroid in S-type mode)
+    // Helper function to update trail2 geometry (for right spheroid in S-type mode, photon 1)
     function updateTrailGeometry2(points, colorIndices, obstructionFlags) {
         if (points.length < 2) {
             trailGeometry2.setFromPoints([]);
@@ -376,14 +884,16 @@ function init() {
         trailGeometry2.setFromPoints(points);
         
         // Set vertex colors by mapping indices to gradient table
+        // Use original table for single photon, magenta table for multiple photons
+        const colorTable = numberOfPhotons === 1 ? gradientColorTable : gradientColorTable1;
         const colorArray = new Float32Array(points.length * 3);
         for (let i = 0; i < points.length; i++) {
             const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
-            let color = gradientColorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            let color = colorTable[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
             
             // Apply obstruction darkening
             if (obstructionFlags && obstructionFlags[i]) {
-                if (transparency === 0) {
+                if (opacity === 1) {
                     color.multiplyScalar(0.1);
                 } else {
                     color.multiplyScalar(0.6);
@@ -396,6 +906,134 @@ function init() {
         }
         trailGeometry2.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
         trailGeometry2.setIndex(null);
+    }
+    
+    // Helper function to update trail3 geometry (for photon 2 in torus/C curve)
+    function updateTrailGeometry3(points, colorIndices, obstructionFlags) {
+        if (points.length < 2) {
+            trailGeometry3.setFromPoints([]);
+            return;
+        }
+        
+        trailGeometry3.setFromPoints(points);
+        
+        // Set vertex colors by mapping indices to gradient table (green/yellow for photon 2)
+        const colorArray = new Float32Array(points.length * 3);
+        for (let i = 0; i < points.length; i++) {
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable2[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (opacity === 1) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
+            }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
+        }
+        trailGeometry3.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        trailGeometry3.setIndex(null);
+    }
+    
+    // Helper function to update trail4 geometry (for photon 3 in torus/C curve)
+    function updateTrailGeometry4(points, colorIndices, obstructionFlags) {
+        if (points.length < 2) {
+            trailGeometry4.setFromPoints([]);
+            return;
+        }
+        
+        trailGeometry4.setFromPoints(points);
+        
+        // Set vertex colors by mapping indices to gradient table (cyan for photon 3)
+        const colorArray = new Float32Array(points.length * 3);
+        for (let i = 0; i < points.length; i++) {
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable3[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (opacity === 1) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
+            }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
+        }
+        trailGeometry4.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        trailGeometry4.setIndex(null);
+    }
+    
+    // Helper function to update trail5 geometry (for photon 2 right in S curve mode)
+    function updateTrailGeometry5(points, colorIndices, obstructionFlags) {
+        if (points.length < 2) {
+            trailGeometry5.setFromPoints([]);
+            return;
+        }
+        
+        trailGeometry5.setFromPoints(points);
+        
+        // Set vertex colors by mapping indices to gradient table (green/yellow for photon 2)
+        const colorArray = new Float32Array(points.length * 3);
+        for (let i = 0; i < points.length; i++) {
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable2[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (opacity === 1) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
+            }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
+        }
+        trailGeometry5.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        trailGeometry5.setIndex(null);
+    }
+    
+    // Helper function to update trail6 geometry (for photon 3 right in S curve mode)
+    function updateTrailGeometry6(points, colorIndices, obstructionFlags) {
+        if (points.length < 2) {
+            trailGeometry6.setFromPoints([]);
+            return;
+        }
+        
+        trailGeometry6.setFromPoints(points);
+        
+        // Set vertex colors by mapping indices to gradient table (cyan for photon 3)
+        const colorArray = new Float32Array(points.length * 3);
+        for (let i = 0; i < points.length; i++) {
+            const colorIndex = (colorIndices && colorIndices[i] !== undefined) ? colorIndices[i] : 0;
+            let color = gradientColorTable3[Math.max(0, Math.min(GRADIENT_TABLE_SIZE - 1, colorIndex))].clone();
+            
+            // Apply obstruction darkening
+            if (obstructionFlags && obstructionFlags[i]) {
+                if (opacity === 1) {
+                    color.multiplyScalar(0.1);
+                } else {
+                    color.multiplyScalar(0.6);
+                }
+            }
+            
+            colorArray[i * 3] = color.r;
+            colorArray[i * 3 + 1] = color.g;
+            colorArray[i * 3 + 2] = color.b;
+        }
+        trailGeometry6.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        trailGeometry6.setIndex(null);
     }
     
     // Arrow markers on trail to show direction
@@ -568,6 +1206,7 @@ function init() {
     let windingRatio = '1:2'; // '2:1' (2π toroidal, 4π poloidal) or '1:2' (4π toroidal, 2π poloidal)
     let spinDirection = -1; // -1 for spin up, 1 for spin down (legacy, kept for compatibility)
     let pathMode = 'torus'; // 'torus', 'lemniscate-s', or 'lemniscate-c'
+    let numberOfPhotons = 1; // Number of photons to display (1, 2, or 3)
     
     // Chirality and charge variables (separated from spin)
     // Coordinate convention: z-axis is major toroidal axis (magnetic north direction)
@@ -611,7 +1250,7 @@ function init() {
     let lastCompletedAvgPoloidalAngularMomentum = new THREE.Vector3(0, 0, 0);
     let lastCompletedAvgTotalAngularMomentum = new THREE.Vector3(0, 0, 0);
     
-    // Photon colors
+    // Photon colors (legacy - kept for backward compatibility)
     const photonColorVisible = 0xff6b6b; // Red when visible
     const photonColorObstructed = 0x8888ff; // Blue when behind torus
 
@@ -1001,6 +1640,71 @@ function init() {
     }
     
     // ============================================================================
+    // COORDINATE TRANSFORMATION FUNCTIONS FOR MULTIPLE PHOTONS
+    // ============================================================================
+    
+    // Coordinate transformation: Z→X, X→Y, Y→Z (for photon 2 in torus, photon 3 in C curve)
+    function transformCoordinatesXPrimary(x, y, z) {
+        return new THREE.Vector3(z, x, y);
+    }
+    
+    // Coordinate transformation: Z→Y, X→Z, Y→X (for photon 3 in torus, photon 2 in C curve)
+    function transformCoordinatesYPrimary(x, y, z) {
+        return new THREE.Vector3(y, z, x);
+    }
+    
+    // Coordinate transformation: X→Y, Y→Z, Z→X (for photon 2 in C curve, photon 3 in S curve)
+    function transformCoordinatesZPrimary(x, y, z) {
+        return new THREE.Vector3(y, z, x);
+    }
+    
+    // Get coordinate transformation function based on path mode and photon index
+    // photonIndex: 0 = photon 1 (no transformation), 1 = photon 2, 2 = photon 3
+    function getCoordinateTransform(pathMode, photonIndex) {
+        if (photonIndex === 0) {
+            // Photon 1: no transformation
+            return (x, y, z) => new THREE.Vector3(x, y, z);
+        }
+        
+        if (pathMode === 'torus') {
+            if (photonIndex === 1) {
+                // Photon 2: X as primary axis
+                return transformCoordinatesXPrimary;
+            } else if (photonIndex === 2) {
+                // Photon 3: Y as primary axis
+                return transformCoordinatesYPrimary;
+            }
+        } else if (pathMode === 'lemniscate-c') {
+            if (photonIndex === 1) {
+                // Photon 2: X as major axis
+                return transformCoordinatesYPrimary;
+            } else if (photonIndex === 2) {
+                // Photon 3: Z as major axis
+                return transformCoordinatesXPrimary;
+            }
+        } else if (pathMode === 'lemniscate-s') {
+            if (photonIndex === 1) {
+                // Photon 2: Spheroids along Y, X as major axis
+                // Coordinate transform: (x, y, z) → (y, z, x), meaning Y → X, Z → Y, X → Z
+                return transformCoordinatesYPrimary;
+            } else if (photonIndex === 2) {
+                // Photon 3: Spheroids along Z, X as major axis
+                // Coordinate transform: (x, y, z) → (z, x, y), meaning Z → X, X → Y, Y → Z
+                return transformCoordinatesXPrimary;
+            }
+        }
+        
+        // Default: no transformation
+        return (x, y, z) => new THREE.Vector3(x, y, z);
+    }
+    
+    // Transform field vector (same transformation as position)
+    function transformFieldVector(vector, transformFn) {
+        const transformed = transformFn(vector.x, vector.y, vector.z);
+        return transformed;
+    }
+    
+    // ============================================================================
     // UNIFIED POSITION FUNCTION: Dispatches to mode-specific implementations
     // ============================================================================
     
@@ -1080,10 +1784,34 @@ function init() {
         wireframe.geometry.dispose();
         wireframe.geometry = new THREE.TorusGeometry(safeMajorRadius, safeMinorRadius, 32, 64);
         
-        // Update material opacity (0 = solid, 1 = invisible)
-        torusMaterial.opacity = 1 - transparency;
-        // Wireframe disappears at transparency = 0, becomes more visible as transparency increases
-        wireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
+        // Update torus2 (X as primary axis) if numberOfPhotons >= 2
+        if (numberOfPhotons >= 2) {
+            if (torus2.geometry) torus2.geometry.dispose();
+            torus2.geometry = new THREE.TorusGeometry(safeMajorRadius, safeMinorRadius, 32, 64);
+            
+            if (wireframe2.geometry) wireframe2.geometry.dispose();
+            wireframe2.geometry = new THREE.TorusGeometry(safeMajorRadius, safeMinorRadius, 32, 64);
+            
+            torus2Material.opacity = opacity;
+            wireframe2Material.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        }
+        
+        // Update torus3 (Y as primary axis) if numberOfPhotons >= 3
+        if (numberOfPhotons >= 3) {
+            if (torus3.geometry) torus3.geometry.dispose();
+            torus3.geometry = new THREE.TorusGeometry(safeMajorRadius, safeMinorRadius, 32, 64);
+            
+            if (wireframe3.geometry) wireframe3.geometry.dispose();
+            wireframe3.geometry = new THREE.TorusGeometry(safeMajorRadius, safeMinorRadius, 32, 64);
+            
+            torus3Material.opacity = opacity;
+            wireframe3Material.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        }
+        
+        // Update material opacity (0 = clear, 1 = solid)
+        torusMaterial.opacity = opacity;
+        // Wireframe disappears at opacity = 1, becomes more visible as opacity decreases
+        wireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
         
         // Update axes scale based on outer radius
         updateAxes(outerRadius);
@@ -1094,6 +1822,20 @@ function init() {
         trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
+        if (numberOfPhotons >= 2) {
+            trailPoints3.length = 0;
+            trailColorIndices3.length = 0;
+            trailObstructionFlags3.length = 0;
+            trailOriginalIndices3.length = 0;
+            trailToroidalAngles3.length = 0;
+        }
+        if (numberOfPhotons >= 3) {
+            trailPoints4.length = 0;
+            trailColorIndices4.length = 0;
+            trailObstructionFlags4.length = 0;
+            trailOriginalIndices4.length = 0;
+            trailToroidalAngles4.length = 0;
+        }
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
         }
@@ -1158,10 +1900,126 @@ function init() {
         spheroidS2Wireframe.updateMatrix();
         
         // Update material opacity
-        spheroidS1Material.opacity = 1 - transparency;
-        spheroidS2Material.opacity = 1 - transparency;
-        spheroidS1WireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
-        spheroidS2WireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
+        spheroidS1Material.opacity = opacity;
+        spheroidS2Material.opacity = opacity;
+        spheroidS1WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        
+        // Update spheroid pair 2 (photon 2) if numberOfPhotons >= 2
+        // For S curve: Photon 2 uses spheroids along Z with X as major axis
+        // Coordinate transform: (x, y, z) → (y, z, x), meaning Y → X, Z → Y, X → Z
+        // Original: spheroids along X, major axis Y (scale.set(1, yScale, 1))
+        // After transform: spheroids along Z, major axis X
+        // So we need to scale along Y first, then rotate Y → X, and position along Z
+        if (numberOfPhotons >= 2) {
+            // Update left spheroid (photon 2)
+            if (spheroidS1_2.geometry) spheroidS1_2.geometry.dispose();
+            spheroidS1_2.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            // Scale along Y first (same as original), then rotate
+            spheroidS1_2.scale.set(1, yScale, 1);
+            // Position along Z axis (negative Z for left spheroid)
+            spheroidS1_2.position.set(0, 0, -totalWidth / 2 + spheroidWidth / 2);
+            // Reset rotation first
+            spheroidS1_2.rotation.set(0, 0, 0);
+            // Rotate 90° around Z to map Y elongation to X elongation
+            spheroidS1_2.rotation.set(0, 0, Math.PI / 2);
+            spheroidS1_2.updateMatrix();
+            
+            // Update left spheroid wireframe
+            if (spheroidS1_2Wireframe.geometry) spheroidS1_2Wireframe.geometry.dispose();
+            spheroidS1_2Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            spheroidS1_2Wireframe.scale.set(1, yScale, 1);
+            spheroidS1_2Wireframe.position.set(0, 0, -totalWidth / 2 + spheroidWidth / 2);
+            spheroidS1_2Wireframe.rotation.set(0, 0, 0);
+            spheroidS1_2Wireframe.rotation.set(0, 0, Math.PI / 2);
+            spheroidS1_2Wireframe.updateMatrix();
+            
+            // Update right spheroid (photon 2)
+            if (spheroidS2_2.geometry) spheroidS2_2.geometry.dispose();
+            spheroidS2_2.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            // Scale along Y first (same as original), then rotate
+            spheroidS2_2.scale.set(1, yScale, 1);
+            // Position along Z axis (positive Z for right spheroid)
+            spheroidS2_2.position.set(0, 0, totalWidth / 2 - spheroidWidth / 2);
+            // Reset rotation first
+            spheroidS2_2.rotation.set(0, 0, 0);
+            // Rotate 90° around Z to map Y elongation to X elongation, then 180° around X to flip
+            spheroidS2_2.rotation.set(Math.PI, 0, Math.PI / 2);
+            spheroidS2_2.updateMatrix();
+            
+            // Update right spheroid wireframe
+            if (spheroidS2_2Wireframe.geometry) spheroidS2_2Wireframe.geometry.dispose();
+            spheroidS2_2Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            spheroidS2_2Wireframe.scale.set(1, yScale, 1);
+            spheroidS2_2Wireframe.position.set(0, 0, totalWidth / 2 - spheroidWidth / 2);
+            spheroidS2_2Wireframe.rotation.set(0, 0, 0);
+            spheroidS2_2Wireframe.rotation.set(Math.PI, 0, Math.PI / 2);
+            spheroidS2_2Wireframe.updateMatrix();
+            
+            // Update material opacity
+            spheroidS1_2Material.opacity = opacity;
+            spheroidS2_2Material.opacity = opacity;
+            spheroidS1_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            spheroidS2_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        }
+        
+        // Update spheroid pair 3 (photon 3) if numberOfPhotons >= 3
+        // For S curve: Photon 3 uses spheroids along Y with Z as major axis
+        // Coordinate transform: (x, y, z) → (z, x, y), meaning Z → X, X → Y, Y → Z
+        // Original: spheroids along X, major axis Y (scale.set(1, yScale, 1))
+        // After transform: spheroids along Y, major axis Z
+        // So we need to scale along Y first, then rotate Y → Z
+        if (numberOfPhotons >= 3) {
+            // Update left spheroid (photon 3)
+            if (spheroidS1_3.geometry) spheroidS1_3.geometry.dispose();
+            spheroidS1_3.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            // Scale along Y first (same as original), then rotate
+            spheroidS1_3.scale.set(1, yScale, 1);
+            // Position along Y axis (negative Y for left spheroid)
+            spheroidS1_3.position.set(0, -totalWidth / 2 + spheroidWidth / 2, 0);
+            // Reset rotation first
+            spheroidS1_3.rotation.set(0, 0, 0);
+            // Rotate -90° around X to map Y elongation to Z elongation
+            spheroidS1_3.rotation.set(-Math.PI / 2, 0, 0);
+            spheroidS1_3.updateMatrix();
+            
+            // Update left spheroid wireframe
+            if (spheroidS1_3Wireframe.geometry) spheroidS1_3Wireframe.geometry.dispose();
+            spheroidS1_3Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            spheroidS1_3Wireframe.scale.set(1, yScale, 1);
+            spheroidS1_3Wireframe.position.set(0, -totalWidth / 2 + spheroidWidth / 2, 0);
+            spheroidS1_3Wireframe.rotation.set(0, 0, 0);
+            spheroidS1_3Wireframe.rotation.set(-Math.PI / 2, 0, 0);
+            spheroidS1_3Wireframe.updateMatrix();
+            
+            // Update right spheroid (photon 3)
+            if (spheroidS2_3.geometry) spheroidS2_3.geometry.dispose();
+            spheroidS2_3.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            // Scale along Y first (same as original), then rotate
+            spheroidS2_3.scale.set(1, yScale, 1);
+            // Position along Y axis (positive Y for right spheroid)
+            spheroidS2_3.position.set(0, totalWidth / 2 - spheroidWidth / 2, 0);
+            // Reset rotation first
+            spheroidS2_3.rotation.set(0, 0, 0);
+            // Rotate -90° around X to map Y elongation to Z elongation, then 180° around Z to flip
+            spheroidS2_3.rotation.set(-Math.PI / 2, 0, Math.PI);
+            spheroidS2_3.updateMatrix();
+            
+            // Update right spheroid wireframe
+            if (spheroidS2_3Wireframe.geometry) spheroidS2_3Wireframe.geometry.dispose();
+            spheroidS2_3Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+            spheroidS2_3Wireframe.scale.set(1, yScale, 1);
+            spheroidS2_3Wireframe.position.set(0, totalWidth / 2 - spheroidWidth / 2, 0);
+            spheroidS2_3Wireframe.rotation.set(0, 0, 0);
+            spheroidS2_3Wireframe.rotation.set(-Math.PI / 2, 0, Math.PI);
+            spheroidS2_3Wireframe.updateMatrix();
+            
+            // Update material opacity
+            spheroidS1_3Material.opacity = opacity;
+            spheroidS2_3Material.opacity = opacity;
+            spheroidS1_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            spheroidS2_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        }
         
         // Update axes scale based on outer radius
         updateAxes(outerRadius);
@@ -1232,10 +2090,88 @@ function init() {
         spheroidWireframe.scale.set(1, yScale, 1);
         spheroidWireframe.updateMatrix(); // Ensure the scale is applied
         
-        // Update material opacity (0 = solid, 1 = invisible)
-        spheroidMaterial.opacity = 1 - transparency;
-        // Wireframe disappears at transparency = 0, becomes more visible as transparency increases
-        spheroidWireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
+        // Update material opacity (0 = clear, 1 = solid)
+        spheroidMaterial.opacity = opacity;
+        // Wireframe disappears at opacity = 1, becomes more visible as opacity decreases
+        spheroidWireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        
+        // Update spheroid2 (X as major axis) if numberOfPhotons >= 2
+        // For C curve: Photon 2 uses X as major axis via transformCoordinatesYPrimary: (y, z, x)
+        // Original spheroid: Y is major axis (scale y by yScale)
+        // spheroid2: X is major axis (scale x by yScale)
+        // Both use same base radius (safeA) and same scale factor (yScale)
+        if (numberOfPhotons >= 2) {
+            try {
+                if (spheroid2.geometry) spheroid2.geometry.dispose();
+                spheroid2.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+                // Scale Y axis by yScale (same as original spheroid)
+                spheroid2.scale.set(1, yScale, 1);
+                // Reset position to ensure centered at (0, 0, 0)
+                spheroid2.position.set(0, 0, 0);
+                // Reset rotation first
+                spheroid2.rotation.set(0, 0, 0);
+                // Rotate to match coordinate transformation: (y, z, x)
+                // This maps: (x, y, z) → (y, z, x), meaning: Y → X, Z → Y, X → Z
+                // Original spheroid is scaled along Y axis
+                // We scale spheroid2 along Y too, then rotate 90° around Z to map Y → X
+                // This will make the elongation appear along X after rotation
+                spheroid2.rotation.set(0, 0, Math.PI / 2);
+                spheroid2.updateMatrix();
+                
+                if (spheroid2Wireframe.geometry) spheroid2Wireframe.geometry.dispose();
+                spheroid2Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+                spheroid2Wireframe.scale.set(1, yScale, 1);
+                spheroid2Wireframe.position.set(0, 0, 0);
+                spheroid2Wireframe.rotation.set(0, 0, 0);
+                spheroid2Wireframe.rotation.set(0, 0, Math.PI / 2);
+                spheroid2Wireframe.updateMatrix();
+                
+                // Same opacity as spheroid (Photon 1)
+                spheroid2Material.opacity = opacity;
+                spheroid2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            } catch (error) {
+                console.error('Error updating spheroid2:', error);
+            }
+        }
+        
+        // Update spheroid3 (Z as major axis) if numberOfPhotons >= 3
+        // For C curve: Photon 3 uses Z as major axis via transformCoordinatesXPrimary: (z, x, y)
+        // Original spheroid: Y is major axis (scale y by yScale)
+        // spheroid3: Z is major axis (scale z by yScale)
+        // Both use same base radius (safeA) and same scale factor (yScale)
+        if (numberOfPhotons >= 3) {
+            try {
+                if (spheroid3.geometry) spheroid3.geometry.dispose();
+                spheroid3.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+                // Scale Y axis by yScale (same as original spheroid)
+                spheroid3.scale.set(1, yScale, 1);
+                // Reset position to ensure centered at (0, 0, 0)
+                spheroid3.position.set(0, 0, 0);
+                // Reset rotation first
+                spheroid3.rotation.set(0, 0, 0);
+                // Rotate to match coordinate transformation: (z, x, y)
+                // This maps: (x, y, z) → (z, x, y), meaning: Z → X, X → Y, Y → Z
+                // Original spheroid is scaled along Y axis
+                // We scale spheroid3 along Y too, then rotate -90° around X to map Y → Z
+                // This will make the elongation appear along Z after rotation
+                spheroid3.rotation.set(-Math.PI / 2, 0, 0);
+                spheroid3.updateMatrix();
+                
+                if (spheroid3Wireframe.geometry) spheroid3Wireframe.geometry.dispose();
+                spheroid3Wireframe.geometry = new THREE.SphereGeometry(safeA, 32, 32);
+                spheroid3Wireframe.scale.set(1, yScale, 1);
+                spheroid3Wireframe.position.set(0, 0, 0);
+                spheroid3Wireframe.rotation.set(0, 0, 0);
+                spheroid3Wireframe.rotation.set(-Math.PI / 2, 0, 0);
+                spheroid3Wireframe.updateMatrix();
+                
+                // Same opacity as spheroid (Photon 1)
+                spheroid3Material.opacity = opacity;
+                spheroid3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            } catch (error) {
+                console.error('Error updating spheroid3:', error);
+            }
+        }
         
         // Update axes scale based on outer radius
         updateAxes(outerRadius);
@@ -1265,67 +2201,208 @@ function init() {
     // Helper function to update visibility of torus vs spheroid based on path mode
     function updateGeometryVisibility() {
         if (pathMode === 'lemniscate-c') {
-            // Show single spheroid for C-type, hide torus and S-type spheroids
+            // Show spheroids for C-type based on numberOfPhotons
             torus.visible = false;
             wireframe.visible = false;
-            spheroid.visible = true;
-            spheroidWireframe.visible = controls.showWireframe ? controls.showWireframe.checked : false;
+            torus2.visible = false;
+            wireframe2.visible = false;
+            torus3.visible = false;
+            wireframe3.visible = false;
+            
+            spheroid.visible = numberOfPhotons >= 1;
+            spheroidWireframe.visible = (numberOfPhotons >= 1) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 1) {
+                spheroidMaterial.opacity = opacity;
+                spheroidWireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            spheroid2.visible = numberOfPhotons >= 2;
+            spheroid2Wireframe.visible = (numberOfPhotons >= 2) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 2) {
+                spheroid2Material.opacity = opacity;
+                spheroid2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            spheroid3.visible = numberOfPhotons >= 3;
+            spheroid3Wireframe.visible = (numberOfPhotons >= 3) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 3) {
+                spheroid3Material.opacity = opacity;
+                spheroid3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            
             spheroidS1.visible = false;
             spheroidS1Wireframe.visible = false;
             spheroidS2.visible = false;
             spheroidS2Wireframe.visible = false;
-            // Show only first trail, photon, and vectors for C-type
+            spheroidS1_2.visible = false;
+            spheroidS1_2Wireframe.visible = false;
+            spheroidS2_2.visible = false;
+            spheroidS2_2Wireframe.visible = false;
+            spheroidS1_3.visible = false;
+            spheroidS1_3Wireframe.visible = false;
+            spheroidS2_3.visible = false;
+            spheroidS2_3Wireframe.visible = false;
+            
+            // Show trails and photons based on numberOfPhotons
             trail.visible = true;
             trail2.visible = false;
-            photon.visible = true; // Ensure photon is visible when switching from S-type
+            trail3.visible = numberOfPhotons >= 2;
+            trail4.visible = numberOfPhotons >= 3;
+            trail5.visible = false;
+            trail6.visible = false;
+            
+            photon.visible = true;
             photon2.visible = false;
-            // E/M arrows visibility controlled by checkbox
+            photon3.visible = numberOfPhotons >= 2;
+            photon4.visible = numberOfPhotons >= 3;
+            photon5.visible = false;
+            photon6.visible = false;
+            
+            // E/M arrows visibility
             const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
             electricFieldArrow.visible = showVectors;
             magneticFieldArrow.visible = showVectors;
             electricFieldArrow2.visible = false;
             magneticFieldArrow2.visible = false;
+            electricFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            magneticFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            electricFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            magneticFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            electricFieldArrow5.visible = false;
+            magneticFieldArrow5.visible = false;
+            electricFieldArrow6.visible = false;
+            magneticFieldArrow6.visible = false;
         } else if (pathMode === 'lemniscate-s') {
-            // Show two spheroids for S-type, hide torus and C-type spheroid
+            // Show spheroids for S-type based on numberOfPhotons
             torus.visible = false;
             wireframe.visible = false;
+            torus2.visible = false;
+            wireframe2.visible = false;
+            torus3.visible = false;
+            wireframe3.visible = false;
+            
             spheroid.visible = false;
             spheroidWireframe.visible = false;
-            spheroidS1.visible = true;
-            spheroidS1Wireframe.visible = controls.showWireframe ? controls.showWireframe.checked : false;
-            spheroidS2.visible = true;
-            spheroidS2Wireframe.visible = controls.showWireframe ? controls.showWireframe.checked : false;
-            // Show both trails, photons, and vectors for S-type
+            spheroid2.visible = false;
+            spheroid2Wireframe.visible = false;
+            spheroid3.visible = false;
+            spheroid3Wireframe.visible = false;
+            
+            spheroidS1.visible = numberOfPhotons >= 1;
+            spheroidS1Wireframe.visible = (numberOfPhotons >= 1) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            spheroidS2.visible = numberOfPhotons >= 1;
+            spheroidS2Wireframe.visible = (numberOfPhotons >= 1) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 1) {
+                spheroidS1Material.opacity = opacity;
+                spheroidS2Material.opacity = opacity;
+                spheroidS1WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+                spheroidS2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            spheroidS1_2.visible = numberOfPhotons >= 2;
+            spheroidS1_2Wireframe.visible = (numberOfPhotons >= 2) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            spheroidS2_2.visible = numberOfPhotons >= 2;
+            spheroidS2_2Wireframe.visible = (numberOfPhotons >= 2) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 2) {
+                spheroidS1_2Material.opacity = opacity;
+                spheroidS2_2Material.opacity = opacity;
+                spheroidS1_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+                spheroidS2_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            spheroidS1_3.visible = numberOfPhotons >= 3;
+            spheroidS1_3Wireframe.visible = (numberOfPhotons >= 3) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            spheroidS2_3.visible = numberOfPhotons >= 3;
+            spheroidS2_3Wireframe.visible = (numberOfPhotons >= 3) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            if (numberOfPhotons >= 3) {
+                spheroidS1_3Material.opacity = opacity;
+                spheroidS2_3Material.opacity = opacity;
+                spheroidS1_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+                spheroidS2_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+            }
+            
+            // Show trails and photons based on numberOfPhotons
             trail.visible = true;
             trail2.visible = true;
+            trail3.visible = numberOfPhotons >= 2;
+            trail4.visible = numberOfPhotons >= 2;
+            trail5.visible = numberOfPhotons >= 2; // Photon 2 right track in S curve
+            trail6.visible = numberOfPhotons >= 3;
+            
+            photon.visible = true;
             photon2.visible = true;
-            // E/M arrows visibility controlled by checkbox
+            photon3.visible = numberOfPhotons >= 2;
+            photon4.visible = numberOfPhotons >= 3;
+            photon5.visible = numberOfPhotons >= 2;
+            photon6.visible = numberOfPhotons >= 3;
+            
+            // E/M arrows visibility
             const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
             electricFieldArrow.visible = showVectors;
             magneticFieldArrow.visible = showVectors;
             electricFieldArrow2.visible = showVectors;
             magneticFieldArrow2.visible = showVectors;
+            electricFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            magneticFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            electricFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            magneticFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            electricFieldArrow5.visible = (numberOfPhotons >= 2) && showVectors;
+            magneticFieldArrow5.visible = (numberOfPhotons >= 2) && showVectors;
+            electricFieldArrow6.visible = (numberOfPhotons >= 3) && showVectors;
+            magneticFieldArrow6.visible = (numberOfPhotons >= 3) && showVectors;
         } else {
-            // Show torus, hide all spheroids
-            torus.visible = true;
-            wireframe.visible = controls.showWireframe ? controls.showWireframe.checked : false;
+            // Torus mode (default)
+            torus.visible = numberOfPhotons >= 1;
+            wireframe.visible = (numberOfPhotons >= 1) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            torus2.visible = numberOfPhotons >= 2;
+            wireframe2.visible = (numberOfPhotons >= 2) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            torus3.visible = numberOfPhotons >= 3;
+            wireframe3.visible = (numberOfPhotons >= 3) && (controls.showWireframe ? controls.showWireframe.checked : false);
+            
             spheroid.visible = false;
             spheroidWireframe.visible = false;
+            spheroid2.visible = false;
+            spheroid2Wireframe.visible = false;
+            spheroid3.visible = false;
+            spheroid3Wireframe.visible = false;
             spheroidS1.visible = false;
             spheroidS1Wireframe.visible = false;
             spheroidS2.visible = false;
             spheroidS2Wireframe.visible = false;
-            // Show only first trail for torus mode
+            spheroidS1_2.visible = false;
+            spheroidS1_2Wireframe.visible = false;
+            spheroidS2_2.visible = false;
+            spheroidS2_2Wireframe.visible = false;
+            spheroidS1_3.visible = false;
+            spheroidS1_3Wireframe.visible = false;
+            spheroidS2_3.visible = false;
+            spheroidS2_3Wireframe.visible = false;
+            
+            // Show trails and photons based on numberOfPhotons
             trail.visible = true;
             trail2.visible = false;
-            // Ensure photon is visible when switching from S-type
+            trail3.visible = numberOfPhotons >= 2;
+            trail4.visible = numberOfPhotons >= 3;
+            trail5.visible = false;
+            trail6.visible = false;
+            
             photon.visible = true;
-            // E/M arrows visibility controlled by checkbox
+            photon2.visible = false;
+            photon3.visible = numberOfPhotons >= 2;
+            photon4.visible = numberOfPhotons >= 3;
+            photon5.visible = false;
+            photon6.visible = false;
+            
+            // E/M arrows visibility
             const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
             electricFieldArrow.visible = showVectors;
             magneticFieldArrow.visible = showVectors;
             electricFieldArrow2.visible = false;
             magneticFieldArrow2.visible = false;
+            electricFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            magneticFieldArrow3.visible = (numberOfPhotons >= 2) && showVectors;
+            electricFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            magneticFieldArrow4.visible = (numberOfPhotons >= 3) && showVectors;
+            electricFieldArrow5.visible = false;
+            magneticFieldArrow5.visible = false;
+            electricFieldArrow6.visible = false;
+            magneticFieldArrow6.visible = false;
         }
     }
 
@@ -1384,6 +2461,99 @@ function init() {
     magneticFieldArrow2.visible = false; // Hidden by default, shown only for S-type
     scene.add(magneticFieldArrow2);
     
+    // Additional field arrows for multiple photons
+    // Arrows 3 and 4: for photon 2 in torus/C curve, or photon 2 in S curve
+    let electricFieldArrow3 = new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        electricFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    electricFieldArrow3.visible = false;
+    scene.add(electricFieldArrow3);
+    
+    let magneticFieldArrow3 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        magneticFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    magneticFieldArrow3.visible = false;
+    scene.add(magneticFieldArrow3);
+    
+    // Arrows 5 and 6: for photon 3 in torus/C curve, or photon 2 right in S curve
+    let electricFieldArrow4 = new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        electricFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    electricFieldArrow4.visible = false;
+    scene.add(electricFieldArrow4);
+    
+    let magneticFieldArrow4 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        magneticFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    magneticFieldArrow4.visible = false;
+    scene.add(magneticFieldArrow4);
+    
+    // Arrows 7 and 8: for photon 3 left in S curve
+    let electricFieldArrow5 = new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        electricFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    electricFieldArrow5.visible = false;
+    scene.add(electricFieldArrow5);
+    
+    let magneticFieldArrow5 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        magneticFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    magneticFieldArrow5.visible = false;
+    scene.add(magneticFieldArrow5);
+    
+    // Arrows 9 and 10: for photon 3 right in S curve
+    let electricFieldArrow6 = new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        electricFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    electricFieldArrow6.visible = false;
+    scene.add(electricFieldArrow6);
+    
+    let magneticFieldArrow6 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        arrowBaseLength,
+        magneticFieldColor,
+        arrowBaseHeadLength,
+        arrowBaseHeadWidth
+    );
+    magneticFieldArrow6.visible = false;
+    scene.add(magneticFieldArrow6);
+    
     // Function to update arrow direction and position
     function updateArrow(arrow, direction, position, color, scaleFactor = 1) {
         // Remove old arrow from scene
@@ -1417,7 +2587,7 @@ function init() {
 
     // Control handlers
     const controls = {
-        transparency: document.getElementById('transparency'),
+        opacity: document.getElementById('opacity'),
         innerRadius: document.getElementById('innerRadius'),
         outerRadius: document.getElementById('outerRadius'),
         photonSpeed: document.getElementById('photonSpeed'),
@@ -1434,6 +2604,7 @@ function init() {
         particleType: document.getElementById('particleType'),
         windingRatio: document.getElementById('windingRatio'),
         spinDirection: document.getElementById('spinDirection'),
+        numberOfPhotons: document.getElementById('numberOfPhotons'),
         setFineStructure: document.getElementById('setFineStructure'),
         showWireframe: document.getElementById('showWireframe'),
         showAxes: document.getElementById('showAxes'),
@@ -1441,7 +2612,7 @@ function init() {
     };
 
     // Check if controls exist
-    if (!controls.transparency || !controls.innerRadius) {
+    if (!controls.opacity || !controls.innerRadius) {
         console.error('Control elements not found!');
         return;
     }
@@ -1456,7 +2627,7 @@ function init() {
 
     // Control event listeners
     // Function to update trail obstruction flags (colors are updated via indices in animate loop)
-    function updateTrailColorsForTransparency() {
+    function updateTrailColorsForOpacity() {
         // Recalculate obstruction for all trail points
         for (let i = 0; i < trailPoints.length; i++) {
             trailObstructionFlags[i] = isPhotonObstructed(trailPoints[i]);
@@ -1472,22 +2643,42 @@ function init() {
         // Geometry will be updated in animate loop with current color indices
     }
 
-    controls.transparency.addEventListener('input', (e) => {
-        transparency = parseFloat(e.target.value);
-        updateValueDisplay('transparency', transparency);
+    controls.opacity.addEventListener('input', (e) => {
+        opacity = parseFloat(e.target.value);
+        updateValueDisplay('opacity', opacity);
         // Update opacity directly without recreating geometry
-        torusMaterial.opacity = 1 - transparency;
-        spheroidMaterial.opacity = 1 - transparency;
-        spheroidS1Material.opacity = 1 - transparency;
-        spheroidS2Material.opacity = 1 - transparency;
-        // Wireframe disappears at transparency = 0, becomes more visible as transparency increases
-        wireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
-        spheroidWireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
-        spheroidS1WireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
-        spheroidS2WireframeMaterial.opacity = transparency > 0 ? 0.2 * (1 - transparency) : 0;
+        torusMaterial.opacity = opacity;
+        spheroidMaterial.opacity = opacity;
+        spheroidS1Material.opacity = opacity;
+        spheroidS2Material.opacity = opacity;
+        // Update torus2 and torus3 opacity
+        torus2Material.opacity = opacity;
+        torus3Material.opacity = opacity;
+        // Update spheroid2 and spheroid3 opacity (for C curve mode, photons 2 and 3)
+        spheroid2Material.opacity = opacity;
+        spheroid3Material.opacity = opacity;
+        // Update spheroidS1_2 and spheroidS2_2 opacity (for S curve mode, photon 2)
+        spheroidS1_2Material.opacity = opacity;
+        spheroidS2_2Material.opacity = opacity;
+        // Update spheroidS1_3 and spheroidS2_3 opacity (for S curve mode, photon 3)
+        spheroidS1_3Material.opacity = opacity;
+        spheroidS2_3Material.opacity = opacity;
+        // Wireframe disappears at opacity = 1, becomes more visible as opacity decreases
+        wireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        wireframe2Material.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        wireframe3Material.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidWireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS1WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroid2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroid3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS1_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS2_2WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS1_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
+        spheroidS2_3WireframeMaterial.opacity = opacity < 1 ? 0.2 * opacity : 0;
         
-        // Update trail colors based on new transparency value
-        updateTrailColorsForTransparency();
+        // Update trail colors based on new opacity value
+        updateTrailColorsForOpacity();
     });
 
     controls.showWireframe.addEventListener('change', (e) => {
@@ -1589,6 +2780,55 @@ function init() {
     }
 
     controls.innerRadius.addEventListener('input', (e) => {
+        // Clear all trails when changing minor axis/inner radius
+        // Clear trail 1 (photon 1)
+        trailPoints.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
+        trailToroidalAngles.length = 0;
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
+        
         innerRadius = parseFloat(e.target.value);
         // Only ensure outerRadius is greater than innerRadius for torus mode
         const isLemniscate = pathMode === 'lemniscate-s' || pathMode === 'lemniscate-c';
@@ -1602,6 +2842,55 @@ function init() {
     });
 
     controls.outerRadius.addEventListener('input', (e) => {
+        // Clear all trails when changing major axis/outer radius
+        // Clear trail 1 (photon 1)
+        trailPoints.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
+        trailToroidalAngles.length = 0;
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
+        
         outerRadius = parseFloat(e.target.value);
         // Only ensure outerRadius is greater than innerRadius for torus mode
         const isLemniscate = pathMode === 'lemniscate-s' || pathMode === 'lemniscate-c';
@@ -1639,27 +2928,108 @@ function init() {
     });
 
     controls.precession.addEventListener('input', (e) => {
-        // Clear trail when changing precession to avoid confusion
+        // Clear all trails when changing precession to avoid confusion
+        // Clear trail 1 (photon 1)
         trailPoints.length = 0;
         trailColorIndices.length = 0;
         trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
-        if (trailPoints.length > 1) {
-            trailGeometry.setFromPoints(trailPoints);
-        }
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
+        
         precession = parseFloat(e.target.value) || 0;
     });
     
     controls.precession.addEventListener('change', (e) => {
         precession = parseFloat(e.target.value) || 0;
-        // Clear trail when changing precession to avoid confusion
+        // Clear all trails when changing precession to avoid confusion
+        // Clear trail 1 (photon 1)
         trailPoints.length = 0;
         trailColorIndices.length = 0;
         trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
-        if (trailPoints.length > 1) {
-            trailGeometry.setFromPoints(trailPoints);
-        }
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
     });
 
     // Flag to prevent event handlers from running when we programmatically set slider values
@@ -1717,25 +3087,54 @@ function init() {
     });
 
     controls.setFineStructure.addEventListener('click', () => {
-        // Clear trail when setting values to avoid confusion
+        // Clear all trails when setting values to avoid confusion
+        // Clear trail 1 (photon 1)
         trailPoints.length = 0;
         trailColorIndices.length = 0;
         trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
-        if (trailPoints.length > 1) {
-            trailGeometry.setFromPoints(trailPoints);
-        }
+        trailGeometry.setFromPoints([]);
         
-        // For S-type: also clear the second trail
-        if (pathMode === 'lemniscate-s') {
-            trailPoints2.length = 0;
-            trailColorIndices2.length = 0;
-            trailObstructionFlags2.length = 0;
-            trailToroidalAngles2.length = 0;
-            trailOriginalIndices2.length = 0;
-            // Always update geometry, even when empty, to ensure visual clearing
-            trailGeometry2.setFromPoints([]);
-        }
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
         
         // Check path mode to determine button behavior
         const isLemniscate = pathMode === 'lemniscate-s' || pathMode === 'lemniscate-c';
@@ -1985,15 +3384,54 @@ function init() {
 
     controls.windingRatio.addEventListener('change', (e) => {
         windingRatio = e.target.value;
-        // Clear trail when changing winding ratio to avoid confusion
+        // Clear all trails when changing winding ratio to avoid confusion
+        // Clear trail 1 (photon 1)
         trailPoints.length = 0;
         trailColorIndices.length = 0;
         trailObstructionFlags.length = 0;
         trailOriginalIndices.length = 0;
         trailToroidalAngles.length = 0;
-        if (trailPoints.length > 1) {
-            trailGeometry.setFromPoints(trailPoints);
-        }
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
         
         // Reset accumulated fields and momentum when changing winding ratio
         accumulatedElectricField.set(0, 0, 0);
@@ -2046,6 +3484,13 @@ function init() {
         if (trailPoints.length > 1) {
             trailGeometry.setFromPoints(trailPoints);
         }
+        
+        // Clear all additional trails
+        trailPoints2.length = 0;
+        trailPoints3.length = 0;
+        trailPoints4.length = 0;
+        trailPoints5.length = 0;
+        trailPoints6.length = 0;
         
         // Reset accumulated fields and momentum when changing spin direction
         accumulatedElectricField.set(0, 0, 0);
@@ -2142,30 +3587,116 @@ function init() {
             );
         });
     }
-
-    controls.clearTrack.addEventListener('click', () => {
-        trailPoints.length = 0;
-        trailColorIndices.length = 0;
-        trailObstructionFlags.length = 0;
-        trailOriginalIndices.length = 0;
-        trailToroidalAngles.length = 0;
-        if (trailPoints.length > 1) {
-            trailGeometry.setFromPoints(trailPoints);
-        }
-        
-        // For S-type: also clear the second trail
-        if (pathMode === 'lemniscate-s') {
+    
+    // Number of Photons event listener
+    if (controls.numberOfPhotons) {
+        controls.numberOfPhotons.addEventListener('change', (e) => {
+            numberOfPhotons = parseInt(e.target.value);
+            
+            // Clear all trails when changing number of photons
+            trailPoints.length = 0;
+            trailColorIndices.length = 0;
+            trailObstructionFlags.length = 0;
+            trailOriginalIndices.length = 0;
+            trailToroidalAngles.length = 0;
             trailPoints2.length = 0;
             trailColorIndices2.length = 0;
             trailObstructionFlags2.length = 0;
             trailOriginalIndices2.length = 0;
             trailToroidalAngles2.length = 0;
-            if (trailPoints2.length > 1) {
-                trailGeometry2.setFromPoints(trailPoints2);
-            } else {
-                trailGeometry2.setFromPoints([]);
-            }
-        }
+            trailPoints3.length = 0;
+            trailColorIndices3.length = 0;
+            trailObstructionFlags3.length = 0;
+            trailOriginalIndices3.length = 0;
+            trailToroidalAngles3.length = 0;
+            trailPoints4.length = 0;
+            trailColorIndices4.length = 0;
+            trailObstructionFlags4.length = 0;
+            trailOriginalIndices4.length = 0;
+            trailToroidalAngles4.length = 0;
+            trailPoints5.length = 0;
+            trailColorIndices5.length = 0;
+            trailObstructionFlags5.length = 0;
+            trailOriginalIndices5.length = 0;
+            trailToroidalAngles5.length = 0;
+            trailPoints6.length = 0;
+            trailColorIndices6.length = 0;
+            trailObstructionFlags6.length = 0;
+            trailOriginalIndices6.length = 0;
+            trailToroidalAngles6.length = 0;
+            
+            // Reset accumulated fields and momentum
+            accumulatedElectricField.set(0, 0, 0);
+            accumulatedMagneticField.set(0, 0, 0);
+            fieldSampleCount = 0;
+            lastCompletedAvgElectricField.set(0, 0, 0);
+            lastCompletedAvgMagneticField.set(0, 0, 0);
+            accumulatedLinearMomentum.set(0, 0, 0);
+            accumulatedToroidalAngularMomentum.set(0, 0, 0);
+            accumulatedPoloidalAngularMomentum.set(0, 0, 0);
+            accumulatedTotalAngularMomentum.set(0, 0, 0);
+            momentumSampleCount = 0;
+            lastToroidalAngle = 0;
+            angleAtCycleStart = 0;
+            lastCompletedAvgLinearMomentum.set(0, 0, 0);
+            lastCompletedAvgToroidalAngularMomentum.set(0, 0, 0);
+            lastCompletedAvgPoloidalAngularMomentum.set(0, 0, 0);
+            lastCompletedAvgTotalAngularMomentum.set(0, 0, 0);
+            
+            // Update geometry and visibility
+            updateGeometry();
+            updateGeometryVisibility();
+        });
+    }
+
+    controls.clearTrack.addEventListener('click', () => {
+        // Clear trail 1 (photon 1)
+        trailPoints.length = 0;
+        trailColorIndices.length = 0;
+        trailObstructionFlags.length = 0;
+        trailOriginalIndices.length = 0;
+        trailToroidalAngles.length = 0;
+        trailGeometry.setFromPoints([]);
+        
+        // Clear trail 2 (for S-type mode, or photon 2 right track)
+        trailPoints2.length = 0;
+        trailColorIndices2.length = 0;
+        trailObstructionFlags2.length = 0;
+        trailOriginalIndices2.length = 0;
+        trailToroidalAngles2.length = 0;
+        trailGeometry2.setFromPoints([]);
+        
+        // Clear trail 3 (photon 2 in torus/C curve mode)
+        trailPoints3.length = 0;
+        trailColorIndices3.length = 0;
+        trailObstructionFlags3.length = 0;
+        trailOriginalIndices3.length = 0;
+        trailToroidalAngles3.length = 0;
+        trailGeometry3.setFromPoints([]);
+        
+        // Clear trail 4 (photon 3 in torus/C curve mode)
+        trailPoints4.length = 0;
+        trailColorIndices4.length = 0;
+        trailObstructionFlags4.length = 0;
+        trailOriginalIndices4.length = 0;
+        trailToroidalAngles4.length = 0;
+        trailGeometry4.setFromPoints([]);
+        
+        // Clear trail 5 (photon 2 right in S curve mode)
+        trailPoints5.length = 0;
+        trailColorIndices5.length = 0;
+        trailObstructionFlags5.length = 0;
+        trailOriginalIndices5.length = 0;
+        trailToroidalAngles5.length = 0;
+        trailGeometry5.setFromPoints([]);
+        
+        // Clear trail 6 (photon 3 right in S curve mode)
+        trailPoints6.length = 0;
+        trailColorIndices6.length = 0;
+        trailObstructionFlags6.length = 0;
+        trailOriginalIndices6.length = 0;
+        trailToroidalAngles6.length = 0;
+        trailGeometry6.setFromPoints([]);
     });
     
     // Function to update field vectors display
@@ -2980,156 +4511,442 @@ function init() {
             // Declare field variables for use in accumulation (after if/else block)
             let electricField, magneticField;
             
-            // For S-type: update both photons and vectors
+            // Store photon positions for trail updates (accessible to trail update section)
+            let photonPositions = [];
+            
+            // For S-type: update photons for each orientation
             if (pathMode === 'lemniscate-s') {
                 // Calculate the offset (r value)
                 // Use innerRadius and outerRadius directly to avoid conversion errors when r > R
                 const R = outerRadius; // Outer radius (may be smaller than innerRadius when oblate)
                 const r = Math.max(0.1, innerRadius); // Inner radius (may be larger than outerRadius when oblate)
-                const safer = Math.max(0.1, r);
                 
-                // Calculate left track position with precession (if enabled)
-                let leftPosition;
-                let showLeftTrack;
-                let uNormalized; // For right track calculation
-                if (precession === 0) {
-                    // No precession: use base left curve
-                    const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
-                    uNormalized = leftBase.uNormalized;
-                    showLeftTrack = uNormalized >= 2 * Math.PI;
-                    leftPosition = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
-                } else {
-                    // With precession: use precessed left curve
-                    const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
-                    // Only draw left loop when uNormalized in [2π, 4π)
-                    uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
-                    showLeftTrack = uNormalized >= 2 * Math.PI;
-                    leftPosition = new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
+                // Initialize accumulated fields and momentum from all photons
+                let totalElectricField = new THREE.Vector3(0, 0, 0);
+                let totalMagneticField = new THREE.Vector3(0, 0, 0);
+                let totalLinearMomentum = new THREE.Vector3(0, 0, 0);
+                let totalToroidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let totalPoloidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let totalTotalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let photonCount = 0;
+                
+                // Process each orientation (1 to numberOfPhotons)
+                for (let orientIdx = 0; orientIdx < numberOfPhotons; orientIdx++) {
+                    // Get coordinate transformation for this orientation
+                    const transformFn = getCoordinateTransform(pathMode, orientIdx);
+                    
+                    // Calculate left track position with precession (if enabled)
+                    let leftBasePosition;
+                    let showLeftTrack;
+                    let uNormalized;
+                    if (precession === 0) {
+                        const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
+                        uNormalized = leftBase.uNormalized;
+                        showLeftTrack = uNormalized >= 2 * Math.PI;
+                        leftBasePosition = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
+                    } else {
+                        const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
+                        uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
+                        showLeftTrack = uNormalized >= 2 * Math.PI;
+                        leftBasePosition = new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
+                    }
+                    
+                    // Transform left position
+                    const leftPosition = transformFn(leftBasePosition.x, leftBasePosition.y, leftBasePosition.z);
+                    
+                    // Calculate right track position
+                    let rightBasePosition;
+                    let showRightTrack;
+                    if (precession === 0) {
+                        const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
+                        const uS = rightBase.uNormalized;
+                        showRightTrack = uS < 2 * Math.PI;
+                        rightBasePosition = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
+                    } else {
+                        const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
+                        const uS = rightPrecessed.multiPhase % (4 * Math.PI);
+                        showRightTrack = uS < 2 * Math.PI;
+                        rightBasePosition = new THREE.Vector3(rightPrecessed.x, rightPrecessed.y, rightPrecessed.z);
+                    }
+                    
+                    // Transform right position
+                    const rightPosition = transformFn(rightBasePosition.x, rightBasePosition.y, rightBasePosition.z);
+                    
+                    // Determine which photons to use based on orientation index
+                    let leftPhoton, rightPhoton, leftPhotonMaterial, rightPhotonMaterial, leftPhotonGlowMaterial, rightPhotonGlowMaterial;
+                    let leftColorVisible, leftColorObstructed, rightColorVisible, rightColorObstructed;
+                    
+                    if (orientIdx === 0) {
+                        leftPhoton = photon;
+                        rightPhoton = photon2;
+                        leftPhotonMaterial = photonMaterial;
+                        rightPhotonMaterial = photon2Material;
+                        leftPhotonGlowMaterial = photonGlowMaterial;
+                        rightPhotonGlowMaterial = photon2GlowMaterial;
+                        // Use magenta for multiple photons, red for single photon
+                        leftColorVisible = numberOfPhotons >= 2 ? photonMagentaColorVisible : photon1ColorVisible;
+                        leftColorObstructed = numberOfPhotons >= 2 ? photonMagentaColorObstructed : photon1ColorObstructed;
+                        rightColorVisible = numberOfPhotons >= 2 ? photonMagentaColorVisible : photon1ColorVisible;
+                        rightColorObstructed = numberOfPhotons >= 2 ? photonMagentaColorObstructed : photon1ColorObstructed;
+                    } else if (orientIdx === 1) {
+                        leftPhoton = photon3;
+                        rightPhoton = photon5;
+                        leftPhotonMaterial = photon3Material;
+                        rightPhotonMaterial = photon5Material;
+                        leftPhotonGlowMaterial = photon3GlowMaterial;
+                        rightPhotonGlowMaterial = photon5GlowMaterial;
+                        // Yellow/green for photon 2
+                        leftColorVisible = photonYellowGreenColorVisible;
+                        leftColorObstructed = photonYellowGreenColorObstructed;
+                        rightColorVisible = photonYellowGreenColorVisible;
+                        rightColorObstructed = photonYellowGreenColorObstructed;
+                    } else if (orientIdx === 2) {
+                        leftPhoton = photon4;
+                        rightPhoton = photon6;
+                        leftPhotonMaterial = photon4Material;
+                        rightPhotonMaterial = photon6Material;
+                        leftPhotonGlowMaterial = photon4GlowMaterial;
+                        rightPhotonGlowMaterial = photon6GlowMaterial;
+                        // Cyan for photon 3
+                        leftColorVisible = photonCyanColorVisible;
+                        leftColorObstructed = photonCyanColorObstructed;
+                        rightColorVisible = photonCyanColorVisible;
+                        rightColorObstructed = photonCyanColorObstructed;
+                    }
+                    
+                    // Update left photon
+                    if (showLeftTrack) {
+                        leftPhoton.position.copy(leftPosition);
+                        leftPhoton.visible = true;
+                        
+                        const isLeftObstructed = isPhotonObstructed(leftPosition);
+                        const leftColor = isLeftObstructed ? leftColorObstructed : leftColorVisible;
+                        leftPhotonMaterial.color.setHex(leftColor);
+                        leftPhotonMaterial.emissive.setHex(leftColor);
+                        leftPhotonGlowMaterial.color.setHex(leftColor);
+                        
+                        // Calculate and transform fields
+                        const { electricField: electricFieldLeftBase, magneticField: magneticFieldLeftBase } = calculateFieldVectors(leftBasePosition, animationTime, majorRadius, minorRadius);
+                        let electricFieldLeft = transformFieldVector(electricFieldLeftBase, transformFn);
+                        let magneticFieldLeft = transformFieldVector(magneticFieldLeftBase, transformFn);
+                        
+                        totalElectricField.add(electricFieldLeft);
+                        totalMagneticField.add(magneticFieldLeft);
+                        
+                        // Calculate momentum
+                        const momentumLeft = calculateMomentum(leftBasePosition, majorRadius, minorRadius);
+                        totalLinearMomentum.add(transformFieldVector(momentumLeft.linearMomentum, transformFn));
+                        totalToroidalAngularMomentum.add(transformFieldVector(momentumLeft.toroidalAngularMomentum, transformFn));
+                        totalPoloidalAngularMomentum.add(transformFieldVector(momentumLeft.poloidalAngularMomentum, transformFn));
+                        totalTotalAngularMomentum.add(transformFieldVector(momentumLeft.totalAngularMomentum, transformFn));
+                        photonCount++;
+                        
+                        // Update arrows - update global variables directly
+                        const scaleFactor = getScaleFactor(majorRadius);
+                        const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
+                        if (showVectors) {
+                            if (orientIdx === 0) {
+                                electricFieldArrow = updateArrow(electricFieldArrow, electricFieldLeft, leftPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow = updateArrow(magneticFieldArrow, magneticFieldLeft, leftPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow.visible = true;
+                                magneticFieldArrow.visible = true;
+                            } else if (orientIdx === 1) {
+                                electricFieldArrow3 = updateArrow(electricFieldArrow3, electricFieldLeft, leftPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow3 = updateArrow(magneticFieldArrow3, magneticFieldLeft, leftPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow3.visible = true;
+                                magneticFieldArrow3.visible = true;
+                            } else if (orientIdx === 2) {
+                                electricFieldArrow4 = updateArrow(electricFieldArrow4, electricFieldLeft, leftPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow4 = updateArrow(magneticFieldArrow4, magneticFieldLeft, leftPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow4.visible = true;
+                                magneticFieldArrow4.visible = true;
+                            }
+                        } else {
+                            if (orientIdx === 0) {
+                                electricFieldArrow.visible = false;
+                                magneticFieldArrow.visible = false;
+                            } else if (orientIdx === 1) {
+                                electricFieldArrow3.visible = false;
+                                magneticFieldArrow3.visible = false;
+                            } else if (orientIdx === 2) {
+                                electricFieldArrow4.visible = false;
+                                magneticFieldArrow4.visible = false;
+                            }
+                        }
+                        
+                        leftPhoton.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                    } else {
+                        leftPhoton.visible = false;
+                        if (orientIdx === 0) {
+                            electricFieldArrow.visible = false;
+                            magneticFieldArrow.visible = false;
+                        } else if (orientIdx === 1) {
+                            electricFieldArrow3.visible = false;
+                            magneticFieldArrow3.visible = false;
+                        } else if (orientIdx === 2) {
+                            electricFieldArrow4.visible = false;
+                            magneticFieldArrow4.visible = false;
+                        }
+                    }
+                    
+                    // Update right photon
+                    if (showRightTrack) {
+                        rightPhoton.position.copy(rightPosition);
+                        rightPhoton.visible = true;
+                        
+                        const isRightObstructed = isPhotonObstructed(rightPosition);
+                        const rightColor = isRightObstructed ? rightColorObstructed : rightColorVisible;
+                        rightPhotonMaterial.color.setHex(rightColor);
+                        rightPhotonMaterial.emissive.setHex(rightColor);
+                        rightPhotonGlowMaterial.color.setHex(rightColor);
+                        
+                        // Calculate and transform fields
+                        const { electricField: electricFieldRightBase, magneticField: magneticFieldRightBase } = calculateFieldVectors(rightBasePosition, animationTime, majorRadius, minorRadius);
+                        let electricFieldRight = transformFieldVector(electricFieldRightBase, transformFn);
+                        let magneticFieldRight = transformFieldVector(magneticFieldRightBase, transformFn);
+                        
+                        totalElectricField.add(electricFieldRight);
+                        totalMagneticField.add(magneticFieldRight);
+                        
+                        // Calculate momentum
+                        const momentumRight = calculateMomentum(rightBasePosition, majorRadius, minorRadius);
+                        totalLinearMomentum.add(transformFieldVector(momentumRight.linearMomentum, transformFn));
+                        totalToroidalAngularMomentum.add(transformFieldVector(momentumRight.toroidalAngularMomentum, transformFn));
+                        totalPoloidalAngularMomentum.add(transformFieldVector(momentumRight.poloidalAngularMomentum, transformFn));
+                        totalTotalAngularMomentum.add(transformFieldVector(momentumRight.totalAngularMomentum, transformFn));
+                        photonCount++;
+                        
+                        // Update arrows - update global variables directly
+                        const scaleFactor = getScaleFactor(majorRadius);
+                        const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
+                        if (showVectors) {
+                            if (orientIdx === 0) {
+                                electricFieldArrow2 = updateArrow(electricFieldArrow2, electricFieldRight, rightPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow2 = updateArrow(magneticFieldArrow2, magneticFieldRight, rightPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow2.visible = true;
+                                magneticFieldArrow2.visible = true;
+                            } else if (orientIdx === 1) {
+                                electricFieldArrow5 = updateArrow(electricFieldArrow5, electricFieldRight, rightPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow5 = updateArrow(magneticFieldArrow5, magneticFieldRight, rightPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow5.visible = true;
+                                magneticFieldArrow5.visible = true;
+                            } else if (orientIdx === 2) {
+                                electricFieldArrow6 = updateArrow(electricFieldArrow6, electricFieldRight, rightPosition, electricFieldColor, scaleFactor);
+                                magneticFieldArrow6 = updateArrow(magneticFieldArrow6, magneticFieldRight, rightPosition, magneticFieldColor, scaleFactor);
+                                electricFieldArrow6.visible = true;
+                                magneticFieldArrow6.visible = true;
+                            }
+                        } else {
+                            if (orientIdx === 0) {
+                                electricFieldArrow2.visible = false;
+                                magneticFieldArrow2.visible = false;
+                            } else if (orientIdx === 1) {
+                                electricFieldArrow5.visible = false;
+                                magneticFieldArrow5.visible = false;
+                            } else if (orientIdx === 2) {
+                                electricFieldArrow6.visible = false;
+                                magneticFieldArrow6.visible = false;
+                            }
+                        }
+                        
+                        rightPhoton.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                    } else {
+                        rightPhoton.visible = false;
+                        if (orientIdx === 0) {
+                            electricFieldArrow2.visible = false;
+                            magneticFieldArrow2.visible = false;
+                        } else if (orientIdx === 1) {
+                            electricFieldArrow5.visible = false;
+                            magneticFieldArrow5.visible = false;
+                        } else if (orientIdx === 2) {
+                            electricFieldArrow6.visible = false;
+                            magneticFieldArrow6.visible = false;
+                        }
+                    }
                 }
                 
-                if (showLeftTrack) {
-                    photon.position.copy(leftPosition);
-                    photon.visible = true;
-                } else {
-                    photon.visible = false;
+                // Hide unused photons
+                if (numberOfPhotons <= 1) {
+                    photon3.visible = false;
+                    photon4.visible = false;
+                    photon5.visible = false;
+                    photon6.visible = false;
+                } else if (numberOfPhotons <= 2) {
+                    photon4.visible = false;
+                    photon5.visible = false;
+                    photon6.visible = false;
                 }
                 
-                // Second photon (right track) - use new precession functions
-                let rightPosition;
-                let showRightTrack;
-                if (precession === 0) {
-                    // No precession: use base right curve
-                    const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
-                    // Right visible when uS < 2π (complement of left's range)
-                    const uS = rightBase.uNormalized;
-                    showRightTrack = uS < 2 * Math.PI;
-                    rightPosition = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
+                // Use first orientation's left track position for main position variable
+                position = photon.position.clone();
+                
+                // Use averaged fields (divide by photon count)
+                if (photonCount > 0) {
+                    electricField = totalElectricField.clone().divideScalar(photonCount);
+                    magneticField = totalMagneticField.clone().divideScalar(photonCount);
                 } else {
-                    // With precession: use precessed right curve
-                    const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
-                    // Right visible when uS < 2π (complement of left's range)
-                    const uS = rightPrecessed.multiPhase % (4 * Math.PI);
-                    showRightTrack = uS < 2 * Math.PI;
-                    rightPosition = new THREE.Vector3(rightPrecessed.x, rightPrecessed.y, rightPrecessed.z);
-                }
-                
-                if (showRightTrack) {
-                    photon2.position.copy(rightPosition);
-                    photon2.visible = true;
-                } else {
-                    photon2.visible = false;
-                }
-                
-                // Update field vectors for left track
-                const { electricField: electricFieldLeft, magneticField: magneticFieldLeft } = calculateFieldVectors(leftPosition, animationTime, majorRadius, minorRadius);
-                const scaleFactor = getScaleFactor(majorRadius);
-                const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
-                if (showLeftTrack && showVectors) {
-                    electricFieldArrow = updateArrow(electricFieldArrow, electricFieldLeft, leftPosition, electricFieldColor, scaleFactor);
-                    magneticFieldArrow = updateArrow(magneticFieldArrow, magneticFieldLeft, leftPosition, magneticFieldColor, scaleFactor);
-                    electricFieldArrow.visible = true;
-                    magneticFieldArrow.visible = true;
-                } else {
-                    electricFieldArrow.visible = false;
-                    magneticFieldArrow.visible = false;
-                }
-                
-                // Update field vectors for right track
-                const { electricField: electricFieldRight, magneticField: magneticFieldRight } = calculateFieldVectors(rightPosition, animationTime, majorRadius, minorRadius);
-                if (showRightTrack && showVectors) {
-                    electricFieldArrow2 = updateArrow(electricFieldArrow2, electricFieldRight, rightPosition, electricFieldColor, scaleFactor);
-                    magneticFieldArrow2 = updateArrow(magneticFieldArrow2, magneticFieldRight, rightPosition, magneticFieldColor, scaleFactor);
-                    electricFieldArrow2.visible = true;
-                    magneticFieldArrow2.visible = true;
-                } else {
-                    electricFieldArrow2.visible = false;
-                    magneticFieldArrow2.visible = false;
-                }
-                
-                // Update photon scales
-                const photonScale = scaleFactor;
-                photon.scale.set(photonScale, photonScale, photonScale);
-                photon2.scale.set(photonScale, photonScale, photonScale);
-                
-                // Check if photons are obstructed and change colors
-                const isLeftObstructed = isPhotonObstructed(leftPosition);
-                const leftColor = isLeftObstructed ? photonColorObstructed : photonColorVisible;
-                photonMaterial.color.setHex(leftColor);
-                photonMaterial.emissive.setHex(leftColor);
-                photonGlowMaterial.color.setHex(leftColor);
-                
-                const isRightObstructed = isPhotonObstructed(rightPosition);
-                const rightColor = isRightObstructed ? photonColorObstructed : photonColorVisible;
-                photon2Material.color.setHex(rightColor);
-                photon2Material.emissive.setHex(rightColor);
-                photon2GlowMaterial.color.setHex(rightColor);
-                
-                // Use the currently visible track's position and fields for accumulation and momentum
-                // If left track is visible, use it; otherwise use right track
-                if (showLeftTrack) {
-                    position = leftPosition;
-                    electricField = electricFieldLeft;
-                    magneticField = magneticFieldLeft;
-                } else if (showRightTrack) {
-                    position = rightPosition;
-                    electricField = electricFieldRight;
-                    magneticField = magneticFieldRight;
-                } else {
-                    // Neither track visible (shouldn't happen, but fallback to left)
-                    position = leftPosition;
-                    electricField = electricFieldLeft;
-                    magneticField = magneticFieldLeft;
+                    // Fallback
+                    const fieldResult = calculateFieldVectors(position, animationTime, majorRadius, minorRadius);
+                    electricField = fieldResult.electricField;
+                    magneticField = fieldResult.magneticField;
                 }
             } else {
-                // For other modes: single photon and vectors as before
-                photon.position.copy(position);
+                // For other modes (torus and C curve): handle multiple photons with coordinate transformations
+                // Initialize accumulated fields and momentum from all photons
+                let totalElectricField = new THREE.Vector3(0, 0, 0);
+                let totalMagneticField = new THREE.Vector3(0, 0, 0);
+                let totalLinearMomentum = new THREE.Vector3(0, 0, 0);
+                let totalToroidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let totalPoloidalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let totalTotalAngularMomentum = new THREE.Vector3(0, 0, 0);
+                let photonCount = 0;
                 
-                // Check if photon is obstructed and change color
-                const isObstructed = isPhotonObstructed(position);
-                const currentColor = isObstructed ? photonColorObstructed : photonColorVisible;
-                photonMaterial.color.setHex(currentColor);
-                photonMaterial.emissive.setHex(currentColor);
-                photonGlowMaterial.color.setHex(currentColor);
-                
-                // Update field vectors (assign to outer variables, not const)
-                const fieldResult = calculateFieldVectors(position, animationTime, majorRadius, minorRadius);
-                electricField = fieldResult.electricField;
-                magneticField = fieldResult.magneticField;
-                const scaleFactor = getScaleFactor(majorRadius);
-                const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
-                if (showVectors) {
-                    electricFieldArrow = updateArrow(electricFieldArrow, electricField, position, electricFieldColor, scaleFactor);
-                    magneticFieldArrow = updateArrow(magneticFieldArrow, magneticField, position, magneticFieldColor, scaleFactor);
-                    electricFieldArrow.visible = true;
-                    magneticFieldArrow.visible = true;
-                } else {
-                    electricFieldArrow.visible = false;
-                    magneticFieldArrow.visible = false;
+                // Process each photon (1 to numberOfPhotons)
+                for (let photonIdx = 0; photonIdx < numberOfPhotons; photonIdx++) {
+                    // Get base position (without transformation)
+                    let basePosition = getPhotonPosition(animationTime, majorRadius, minorRadius, true);
+                    
+                    // Apply coordinate transformation based on photon index and path mode
+                    const transformFn = getCoordinateTransform(pathMode, photonIdx);
+                    const transformedPosition = transformFn(basePosition.x, basePosition.y, basePosition.z);
+                    
+                    // Update photon position based on index
+                    let currentPhoton, currentPhotonMaterial, currentPhotonGlowMaterial;
+                    let currentColorVisible, currentColorObstructed;
+                    
+                    if (photonIdx === 0) {
+                        currentPhoton = photon;
+                        currentPhotonMaterial = photonMaterial;
+                        currentPhotonGlowMaterial = photonGlowMaterial;
+                        // Use magenta for multiple photons, red for single photon
+                        currentColorVisible = numberOfPhotons >= 2 ? photonMagentaColorVisible : photon1ColorVisible;
+                        currentColorObstructed = numberOfPhotons >= 2 ? photonMagentaColorObstructed : photon1ColorObstructed;
+                    } else if (photonIdx === 1) {
+                        currentPhoton = photon3;
+                        currentPhotonMaterial = photon3Material;
+                        currentPhotonGlowMaterial = photon3GlowMaterial;
+                        // Yellow/green for photon 2
+                        currentColorVisible = photonYellowGreenColorVisible;
+                        currentColorObstructed = photonYellowGreenColorObstructed;
+                    } else if (photonIdx === 2) {
+                        currentPhoton = photon4;
+                        currentPhotonMaterial = photon4Material;
+                        currentPhotonGlowMaterial = photon4GlowMaterial;
+                        // Cyan for photon 3
+                        currentColorVisible = photonCyanColorVisible;
+                        currentColorObstructed = photonCyanColorObstructed;
+                    }
+                    
+                    // Update photon position
+                    currentPhoton.position.copy(transformedPosition);
+                    currentPhoton.visible = true;
+                    
+                    // Store position for trail update
+                    photonPositions[photonIdx] = transformedPosition.clone();
+                    
+                    // Check if photon is obstructed and change color
+                    const isObstructed = isPhotonObstructed(transformedPosition);
+                    const currentColor = isObstructed ? currentColorObstructed : currentColorVisible;
+                    currentPhotonMaterial.color.setHex(currentColor);
+                    currentPhotonMaterial.emissive.setHex(currentColor);
+                    currentPhotonGlowMaterial.color.setHex(currentColor);
+                    
+                    // Calculate field vectors for this photon (use base position for calculation, then transform)
+                    const fieldResult = calculateFieldVectors(basePosition, animationTime, majorRadius, minorRadius);
+                    let photonElectricField = fieldResult.electricField;
+                    let photonMagneticField = fieldResult.magneticField;
+                    
+                    // Transform field vectors to match coordinate transformation
+                    photonElectricField = transformFieldVector(photonElectricField, transformFn);
+                    photonMagneticField = transformFieldVector(photonMagneticField, transformFn);
+                    
+                    // Accumulate fields
+                    totalElectricField.add(photonElectricField);
+                    totalMagneticField.add(photonMagneticField);
+                    
+                    // Calculate momentum for this photon (use transformed position for correct r vector)
+                    // First calculate velocity from base position, then transform both position and velocity
+                    const baseMomentum = calculateMomentum(basePosition, majorRadius, minorRadius);
+                    // For momentum, we need to recalculate with transformed position
+                    // The velocity vector should be transformed, and the position is already transformed
+                    // So we transform the momentum components
+                    let photonLinearMomentum = transformFieldVector(baseMomentum.linearMomentum, transformFn);
+                    let photonToroidalAngularMomentum = transformFieldVector(baseMomentum.toroidalAngularMomentum, transformFn);
+                    let photonPoloidalAngularMomentum = transformFieldVector(baseMomentum.poloidalAngularMomentum, transformFn);
+                    let photonTotalAngularMomentum = transformFieldVector(baseMomentum.totalAngularMomentum, transformFn);
+                    
+                    // Accumulate momentum
+                    totalLinearMomentum.add(photonLinearMomentum);
+                    totalToroidalAngularMomentum.add(photonToroidalAngularMomentum);
+                    totalPoloidalAngularMomentum.add(photonPoloidalAngularMomentum);
+                    totalTotalAngularMomentum.add(photonTotalAngularMomentum);
+                    photonCount++;
+                    
+                    // Update field arrows - update global variables directly
+                    const scaleFactor = getScaleFactor(majorRadius);
+                    const showVectors = controls.showFieldAndMomentumVectors ? controls.showFieldAndMomentumVectors.checked : true;
+                    if (showVectors) {
+                        if (photonIdx === 0) {
+                            electricFieldArrow = updateArrow(electricFieldArrow, photonElectricField, transformedPosition, electricFieldColor, scaleFactor);
+                            magneticFieldArrow = updateArrow(magneticFieldArrow, photonMagneticField, transformedPosition, magneticFieldColor, scaleFactor);
+                            electricFieldArrow.visible = true;
+                            magneticFieldArrow.visible = true;
+                        } else if (photonIdx === 1) {
+                            electricFieldArrow3 = updateArrow(electricFieldArrow3, photonElectricField, transformedPosition, electricFieldColor, scaleFactor);
+                            magneticFieldArrow3 = updateArrow(magneticFieldArrow3, photonMagneticField, transformedPosition, magneticFieldColor, scaleFactor);
+                            electricFieldArrow3.visible = true;
+                            magneticFieldArrow3.visible = true;
+                        } else if (photonIdx === 2) {
+                            electricFieldArrow4 = updateArrow(electricFieldArrow4, photonElectricField, transformedPosition, electricFieldColor, scaleFactor);
+                            magneticFieldArrow4 = updateArrow(magneticFieldArrow4, photonMagneticField, transformedPosition, magneticFieldColor, scaleFactor);
+                            electricFieldArrow4.visible = true;
+                            magneticFieldArrow4.visible = true;
+                        }
+                    } else {
+                        if (photonIdx === 0) {
+                            electricFieldArrow.visible = false;
+                            magneticFieldArrow.visible = false;
+                        } else if (photonIdx === 1) {
+                            electricFieldArrow3.visible = false;
+                            magneticFieldArrow3.visible = false;
+                        } else if (photonIdx === 2) {
+                            electricFieldArrow4.visible = false;
+                            magneticFieldArrow4.visible = false;
+                        }
+                    }
+                    
+                    // Update photon scale
+                    const photonScale = scaleFactor;
+                    currentPhoton.scale.set(photonScale, photonScale, photonScale);
                 }
                 
-                // Update photon scale
-                const photonScale = scaleFactor;
-                photon.scale.set(photonScale, photonScale, photonScale);
+                // Hide unused photons
+                if (numberOfPhotons <= 1) {
+                    photon3.visible = false;
+                    photon4.visible = false;
+                    electricFieldArrow3.visible = false;
+                    magneticFieldArrow3.visible = false;
+                    electricFieldArrow4.visible = false;
+                    magneticFieldArrow4.visible = false;
+                } else if (numberOfPhotons <= 2) {
+                    photon4.visible = false;
+                    electricFieldArrow4.visible = false;
+                    magneticFieldArrow4.visible = false;
+                }
+                
+                // Use first photon's position for main position variable (for trail, etc.)
+                position = photon.position.clone();
+                
+                // Use averaged fields and momentum (divide by photon count)
+                if (photonCount > 0) {
+                    electricField = totalElectricField.clone().divideScalar(photonCount);
+                    magneticField = totalMagneticField.clone().divideScalar(photonCount);
+                } else {
+                    // Fallback to single photon calculation
+                    const fieldResult = calculateFieldVectors(position, animationTime, majorRadius, minorRadius);
+                    electricField = fieldResult.electricField;
+                    magneticField = fieldResult.magneticField;
+                }
             }
             
             // Store these values for trail point calculation to ensure consistency
@@ -3318,113 +5135,213 @@ function init() {
             }
             // Figure-8 mode: no constraint needed, position is already on the figure-8 curve
             
-            // For S-type: add points to both trails for full 4π range
+            // For S-type: add points to trails for all orientations
             if (pathMode === 'lemniscate-s') {
                 // Calculate the offset (r value)
                 // Use innerRadius and outerRadius directly to avoid conversion errors when r > R
                 const R = outerRadius; // Outer radius (may be smaller than innerRadius when oblate)
                 const r = Math.max(0.1, innerRadius); // Inner radius (may be larger than outerRadius when oblate)
-                const safer = Math.max(0.1, r);
-                const offset2r = 2 * safer; // Offset for second trail (+2r from first)
                 
-                // Calculate left track position with precession (if enabled)
-                let leftPoint;
-                let showLeftTrail;
-                if (precession === 0) {
-                    // No precession: use base left curve
-                    const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
-                    showLeftTrail = leftBase.uNormalized >= 2 * Math.PI;
-                    if (showLeftTrail) {
-                        leftPoint = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
-                    }
-                } else {
-                    // With precession: use precessed left curve
-                    const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
-                    // Only draw left loop when uNormalized in [2π, 4π)
-                    const uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
-                    showLeftTrail = uNormalized >= 2 * Math.PI;
-                    if (showLeftTrail) {
-                        leftPoint = new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
-                    }
-                }
-                
-                // First trail (left spheroid) - only add points when u is between 4π and 2π
-                if (showLeftTrail) {
-                    const isLeftObstructed = isPhotonObstructed(leftPoint);
+                // Process each orientation (0 to numberOfPhotons - 1)
+                for (let orientIdx = 0; orientIdx < numberOfPhotons; orientIdx++) {
+                    // Get coordinate transformation for this orientation
+                    const transformFn = getCoordinateTransform(pathMode, orientIdx);
                     
-                    trailPoints.push(leftPoint);
-                    // Calculate color index: newest point (angle diff = 0) gets index 0
-                    const angleDiff = 0; // Current point is at current angle
-                    trailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
-                    trailObstructionFlags.push(isLeftObstructed);
-                    trailToroidalAngles.push(currentToroidalAngle);
-                }
-                
-                // Second trail (right spheroid) - use new precession functions
-                let rightPoint;
-                let showRightTrail;
-                if (precession === 0) {
-                    // No precession: use base right curve
-                    const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
-                    // Right visible when uS < 2π (complement of left's range)
-                    const uS = rightBase.uNormalized;
-                    showRightTrail = uS < 2 * Math.PI;
-                    if (showRightTrail) {
-                        rightPoint = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
+                    // Calculate left track position with precession (if enabled)
+                    let leftBasePosition;
+                    let showLeftTrail;
+                    if (precession === 0) {
+                        const leftBase = getSLeftBase(animationTime, toroidalChirality, r, R);
+                        showLeftTrail = leftBase.uNormalized >= 2 * Math.PI;
+                        leftBasePosition = new THREE.Vector3(leftBase.x0, leftBase.y0, leftBase.z0);
+                    } else {
+                        const leftPrecessed = getSLeftPrecessed(animationTime, toroidalChirality, r, R, precession);
+                        const uNormalized = leftPrecessed.multiPhase % (4 * Math.PI);
+                        showLeftTrail = uNormalized >= 2 * Math.PI;
+                        leftBasePosition = new THREE.Vector3(leftPrecessed.x, leftPrecessed.y, leftPrecessed.z);
                     }
-                } else {
-                    // With precession: use precessed right curve
-                    const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
-                    // Right visible when uS < 2π (complement of left's range)
-                    const uS = rightPrecessed.multiPhase % (4 * Math.PI);
-                    showRightTrail = uS < 2 * Math.PI;
-                    if (showRightTrail) {
-                        rightPoint = new THREE.Vector3(rightPrecessed.x, rightPrecessed.y, rightPrecessed.z);
-                    }
-                }
-                
-                // Only add points when right track should be visible
-                if (showRightTrail) {
-                    const isRightObstructed = isPhotonObstructed(rightPoint);
                     
-                    trailPoints2.push(rightPoint);
-                    // Calculate color index: newest point (angle diff = 0) gets index 0
-                    const angleDiff = 0; // Current point is at current angle
-                    trailColorIndices2.push(getColorIndex(angleDiff, gradientCycleLength));
-                    trailObstructionFlags2.push(isRightObstructed);
-                    trailToroidalAngles2.push(currentToroidalAngle);
-                }
-                
-                // Track original sequential index for both trails
-                if (trailOriginalIndices.length === 0) {
-                    trailOriginalIndices.push(0);
-                    trailOriginalIndices2.push(0);
-                } else {
-                    const lastIndex = trailOriginalIndices[trailOriginalIndices.length - 1];
-                    trailOriginalIndices.push(lastIndex + 1);
-                    const lastIndex2 = trailOriginalIndices2[trailOriginalIndices2.length - 1];
-                    trailOriginalIndices2.push(lastIndex2 + 1);
+                    // Transform left position
+                    const leftPosition = transformFn(leftBasePosition.x, leftBasePosition.y, leftBasePosition.z);
+                    
+                    // Calculate right track position
+                    let rightBasePosition;
+                    let showRightTrail;
+                    if (precession === 0) {
+                        const rightBase = getSRightBase(animationTime, toroidalChirality, r, R);
+                        const uS = rightBase.uNormalized;
+                        showRightTrail = uS < 2 * Math.PI;
+                        rightBasePosition = new THREE.Vector3(rightBase.x0, rightBase.y0, rightBase.z0);
+                    } else {
+                        const rightPrecessed = getSRightPrecessed(animationTime, toroidalChirality, r, R, precession);
+                        const uS = rightPrecessed.multiPhase % (4 * Math.PI);
+                        showRightTrail = uS < 2 * Math.PI;
+                        rightBasePosition = new THREE.Vector3(rightPrecessed.x, rightPrecessed.y, rightPrecessed.z);
+                    }
+                    
+                    // Transform right position
+                    const rightPosition = transformFn(rightBasePosition.x, rightBasePosition.y, rightBasePosition.z);
+                    
+                    // Determine which trail arrays to use based on orientation index
+                    let currentTrailPoints, currentTrailColorIndices, currentTrailObstructionFlags, currentTrailToroidalAngles, currentTrailOriginalIndices;
+                    let currentTrailPoints2, currentTrailColorIndices2, currentTrailObstructionFlags2, currentTrailToroidalAngles2, currentTrailOriginalIndices2;
+                    
+                    if (orientIdx === 0) {
+                        currentTrailPoints = trailPoints;
+                        currentTrailColorIndices = trailColorIndices;
+                        currentTrailObstructionFlags = trailObstructionFlags;
+                        currentTrailToroidalAngles = trailToroidalAngles;
+                        currentTrailOriginalIndices = trailOriginalIndices;
+                        currentTrailPoints2 = trailPoints2;
+                        currentTrailColorIndices2 = trailColorIndices2;
+                        currentTrailObstructionFlags2 = trailObstructionFlags2;
+                        currentTrailToroidalAngles2 = trailToroidalAngles2;
+                        currentTrailOriginalIndices2 = trailOriginalIndices2;
+                    } else if (orientIdx === 1) {
+                        currentTrailPoints = trailPoints3;
+                        currentTrailColorIndices = trailColorIndices3;
+                        currentTrailObstructionFlags = trailObstructionFlags3;
+                        currentTrailToroidalAngles = trailToroidalAngles3;
+                        currentTrailOriginalIndices = trailOriginalIndices3;
+                        currentTrailPoints2 = trailPoints5;
+                        currentTrailColorIndices2 = trailColorIndices5;
+                        currentTrailObstructionFlags2 = trailObstructionFlags5;
+                        currentTrailToroidalAngles2 = trailToroidalAngles5;
+                        currentTrailOriginalIndices2 = trailOriginalIndices5;
+                    } else if (orientIdx === 2) {
+                        currentTrailPoints = trailPoints4;
+                        currentTrailColorIndices = trailColorIndices4;
+                        currentTrailObstructionFlags = trailObstructionFlags4;
+                        currentTrailToroidalAngles = trailToroidalAngles4;
+                        currentTrailOriginalIndices = trailOriginalIndices4;
+                        currentTrailPoints2 = trailPoints6;
+                        currentTrailColorIndices2 = trailColorIndices6;
+                        currentTrailObstructionFlags2 = trailObstructionFlags6;
+                        currentTrailToroidalAngles2 = trailToroidalAngles6;
+                        currentTrailOriginalIndices2 = trailOriginalIndices6;
+                    }
+                    
+                    // Add left trail point
+                    if (showLeftTrail) {
+                        const isLeftObstructed = isPhotonObstructed(leftPosition);
+                        const angleDiff = 0;
+                        currentTrailPoints.push(leftPosition);
+                        currentTrailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
+                        currentTrailObstructionFlags.push(isLeftObstructed);
+                        currentTrailToroidalAngles.push(currentToroidalAngle);
+                        if (currentTrailOriginalIndices.length === 0) {
+                            currentTrailOriginalIndices.push(0);
+                        } else {
+                            const lastIndex = currentTrailOriginalIndices[currentTrailOriginalIndices.length - 1];
+                            currentTrailOriginalIndices.push(lastIndex + 1);
+                        }
+                    }
+                    
+                    // Add right trail point
+                    if (showRightTrail) {
+                        const isRightObstructed = isPhotonObstructed(rightPosition);
+                        const angleDiff = 0;
+                        currentTrailPoints2.push(rightPosition);
+                        currentTrailColorIndices2.push(getColorIndex(angleDiff, gradientCycleLength));
+                        currentTrailObstructionFlags2.push(isRightObstructed);
+                        currentTrailToroidalAngles2.push(currentToroidalAngle);
+                        if (currentTrailOriginalIndices2.length === 0) {
+                            currentTrailOriginalIndices2.push(0);
+                        } else {
+                            const lastIndex2 = currentTrailOriginalIndices2[currentTrailOriginalIndices2.length - 1];
+                            currentTrailOriginalIndices2.push(lastIndex2 + 1);
+                        }
+                    }
                 }
             } else {
-                // For other modes: single trail as before
-                // Check if this trail point is obstructed (similar to photon obstruction check)
-                const isTrailPointObstructed = isPhotonObstructed(constrainedPosition);
+                // For other modes (torus and C curve): update trails for all photons
+                // First, update trail for photon 1 (original trail) using position variable
+                // Ensure trail points stay within bounds (only for torus mode)
+                let constrainedPosition = position.clone();
+                if (pathMode === 'torus') {
+                    const distanceFromCenter = Math.sqrt(constrainedPosition.x * constrainedPosition.x + constrainedPosition.y * constrainedPosition.y);
+                    const maxDistance = majorRadius + minorRadius;
+                    const minDistance = Math.max(0, majorRadius - minorRadius);
+                    const maxZ = minorRadius;
+                    
+                    if (distanceFromCenter > maxDistance || distanceFromCenter < minDistance || Math.abs(constrainedPosition.z) > maxZ) {
+                        const clampedDistance = Math.max(minDistance, Math.min(maxDistance, distanceFromCenter));
+                        const angle = Math.atan2(constrainedPosition.y, constrainedPosition.x);
+                        constrainedPosition.x = clampedDistance * Math.cos(angle);
+                        constrainedPosition.y = clampedDistance * Math.sin(angle);
+                        
+                        const distFromMajor = Math.abs(clampedDistance - majorRadius);
+                        const validZ = Math.sqrt(Math.max(0, minorRadius * minorRadius - distFromMajor * distFromMajor));
+                        if (Math.abs(constrainedPosition.z) > validZ) {
+                            constrainedPosition.z = Math.sign(constrainedPosition.z) * validZ;
+                        }
+                    }
+                }
                 
-                // Always add all points to trailPoints to track original sequence
-                // This allows us to detect gaps even when transparency = 0
+                // Add point to trail 1
+                const isTrailPointObstructed = isPhotonObstructed(constrainedPosition);
                 trailPoints.push(constrainedPosition);
-                // Calculate color index: newest point (angle diff = 0) gets index 0
-                const angleDiff = 0; // Current point is at current angle
+                const angleDiff = 0;
                 trailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
                 trailObstructionFlags.push(isTrailPointObstructed);
                 trailToroidalAngles.push(currentToroidalAngle);
-                
-                // Track original sequential index (increments for every point added, creating gaps when points are filtered out)
                 if (trailOriginalIndices.length === 0) {
                     trailOriginalIndices.push(0);
                 } else {
                     const lastIndex = trailOriginalIndices[trailOriginalIndices.length - 1];
                     trailOriginalIndices.push(lastIndex + 1);
+                }
+                
+                // Update trails for additional photons (2 and 3) using stored positions
+                for (let photonIdx = 1; photonIdx < numberOfPhotons; photonIdx++) {
+                    // Get the stored position for this photon (already transformed)
+                    if (!photonPositions || !photonPositions[photonIdx]) {
+                        continue; // Skip if position not available
+                    }
+                    
+                    // Use the transformed position directly - it's already on the correct path
+                    // The constraint logic for torus mode assumes Z-primary orientation,
+                    // so we shouldn't apply it to transformed coordinates
+                    // Instead, just use the transformed position as-is
+                    let constrainedPosition2 = photonPositions[photonIdx].clone();
+                    
+                    // For torus mode with transformed coordinates, the position is already
+                    // constrained by the base position calculation, so we don't need to
+                    // apply additional constraints here
+                    
+                    // Determine which trail arrays to use
+                    let currentTrailPoints, currentTrailColorIndices, currentTrailObstructionFlags, currentTrailToroidalAngles, currentTrailOriginalIndices;
+                    
+                    if (photonIdx === 1) {
+                        currentTrailPoints = trailPoints3;
+                        currentTrailColorIndices = trailColorIndices3;
+                        currentTrailObstructionFlags = trailObstructionFlags3;
+                        currentTrailToroidalAngles = trailToroidalAngles3;
+                        currentTrailOriginalIndices = trailOriginalIndices3;
+                    } else if (photonIdx === 2) {
+                        currentTrailPoints = trailPoints4;
+                        currentTrailColorIndices = trailColorIndices4;
+                        currentTrailObstructionFlags = trailObstructionFlags4;
+                        currentTrailToroidalAngles = trailToroidalAngles4;
+                        currentTrailOriginalIndices = trailOriginalIndices4;
+                    }
+                    
+                    // Check if this trail point is obstructed
+                    const isTrailPointObstructed2 = isPhotonObstructed(constrainedPosition2);
+                    
+                    // Add point to appropriate trail
+                    currentTrailPoints.push(constrainedPosition2);
+                    currentTrailColorIndices.push(getColorIndex(angleDiff, gradientCycleLength));
+                    currentTrailObstructionFlags.push(isTrailPointObstructed2);
+                    currentTrailToroidalAngles.push(currentToroidalAngle);
+                    
+                    // Track original sequential index
+                    if (currentTrailOriginalIndices.length === 0) {
+                        currentTrailOriginalIndices.push(0);
+                    } else {
+                        const lastIndex = currentTrailOriginalIndices[currentTrailOriginalIndices.length - 1];
+                        currentTrailOriginalIndices.push(lastIndex + 1);
+                    }
                 }
             }
             
@@ -3435,9 +5352,12 @@ function init() {
             const maxTrailPoints = 5000; // Maximum points to prevent performance degradation
             let trailChanged = false;
             let trailChanged2 = false;
+            let trailChanged3 = false;
+            let trailChanged4 = false;
             
             if (pathMode === 'lemniscate-s') {
-                // For S-type: update both trails
+                // For S-type: update all trails based on numberOfPhotons
+                // Cleanup trail 1 (photon 1 left)
                 if (trailLengthRotations < 100 && trailToroidalAngles.length > 1) {
                     while (trailToroidalAngles.length > 1) {
                         const oldestAngle = trailToroidalAngles[0];
@@ -3456,7 +5376,7 @@ function init() {
                     }
                 }
                 
-                // Same for trail2
+                // Cleanup trail 2 (photon 1 right)
                 if (trailLengthRotations < 100 && trailToroidalAngles2.length > 1) {
                     while (trailToroidalAngles2.length > 1) {
                         const oldestAngle = trailToroidalAngles2[0];
@@ -3474,19 +5394,94 @@ function init() {
                         trailChanged2 = true;
                     }
                 }
-            } else {
-                // For other modes: single trail
-                if (trailLengthRotations < 100 && trailToroidalAngles.length > 1) {
-                    while (trailToroidalAngles.length > 1) {
-                        const oldestAngle = trailToroidalAngles[0];
-                        // Calculate total angular distance traveled (simple difference since angles are continuous)
+                
+                // Cleanup trail 3 (photon 2 left) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2 && trailLengthRotations < 100 && trailToroidalAngles3.length > 1) {
+                    while (trailToroidalAngles3.length > 1) {
+                        const oldestAngle = trailToroidalAngles3[0];
                         const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
                         
                         if (totalAngleSpan <= maxToroidalAngle) {
-                            break; // Angle span is within limit, stop removing points
+                            break;
                         }
                         
-                        // Remove oldest point
+                        trailPoints3.shift();
+                        trailColorIndices3.shift();
+                        trailObstructionFlags3.shift();
+                        trailOriginalIndices3.shift();
+                        trailToroidalAngles3.shift();
+                        trailChanged3 = true;
+                    }
+                }
+                
+                // Cleanup trail 5 (photon 2 right) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2 && trailLengthRotations < 100 && trailToroidalAngles5.length > 1) {
+                    while (trailToroidalAngles5.length > 1) {
+                        const oldestAngle = trailToroidalAngles5[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
+                        trailPoints5.shift();
+                        trailColorIndices5.shift();
+                        trailObstructionFlags5.shift();
+                        trailOriginalIndices5.shift();
+                        trailToroidalAngles5.shift();
+                        trailChanged3 = true;
+                    }
+                }
+                
+                // Cleanup trail 4 (photon 3 left) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3 && trailLengthRotations < 100 && trailToroidalAngles4.length > 1) {
+                    while (trailToroidalAngles4.length > 1) {
+                        const oldestAngle = trailToroidalAngles4[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
+                        trailPoints4.shift();
+                        trailColorIndices4.shift();
+                        trailObstructionFlags4.shift();
+                        trailOriginalIndices4.shift();
+                        trailToroidalAngles4.shift();
+                        trailChanged4 = true;
+                    }
+                }
+                
+                // Cleanup trail 6 (photon 3 right) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3 && trailLengthRotations < 100 && trailToroidalAngles6.length > 1) {
+                    while (trailToroidalAngles6.length > 1) {
+                        const oldestAngle = trailToroidalAngles6[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
+                        trailPoints6.shift();
+                        trailColorIndices6.shift();
+                        trailObstructionFlags6.shift();
+                        trailOriginalIndices6.shift();
+                        trailToroidalAngles6.shift();
+                        trailChanged4 = true;
+                    }
+                }
+            } else {
+                // For other modes (torus and C curve): update all trails based on numberOfPhotons
+                // Cleanup trail 1
+                if (trailLengthRotations < 100 && trailToroidalAngles.length > 1) {
+                    while (trailToroidalAngles.length > 1) {
+                        const oldestAngle = trailToroidalAngles[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
                         trailPoints.shift();
                         trailColorIndices.shift();
                         trailObstructionFlags.shift();
@@ -3495,11 +5490,50 @@ function init() {
                         trailChanged = true;
                     }
                 }
+                
+                // Cleanup trail 3 (photon 2) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2 && trailLengthRotations < 100 && trailToroidalAngles3.length > 1) {
+                    while (trailToroidalAngles3.length > 1) {
+                        const oldestAngle = trailToroidalAngles3[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
+                        trailPoints3.shift();
+                        trailColorIndices3.shift();
+                        trailObstructionFlags3.shift();
+                        trailOriginalIndices3.shift();
+                        trailToroidalAngles3.shift();
+                        trailChanged3 = true;
+                    }
+                }
+                
+                // Cleanup trail 4 (photon 3) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3 && trailLengthRotations < 100 && trailToroidalAngles4.length > 1) {
+                    while (trailToroidalAngles4.length > 1) {
+                        const oldestAngle = trailToroidalAngles4[0];
+                        const totalAngleSpan = Math.abs(currentToroidalAngle - oldestAngle);
+                        
+                        if (totalAngleSpan <= maxToroidalAngle) {
+                            break;
+                        }
+                        
+                        trailPoints4.shift();
+                        trailColorIndices4.shift();
+                        trailObstructionFlags4.shift();
+                        trailOriginalIndices4.shift();
+                        trailToroidalAngles4.shift();
+                        trailChanged4 = true;
+                    }
+                }
             }
             
             // Limit trail points even when "unlimited" to prevent performance issues
             if (pathMode === 'lemniscate-s') {
-                // For S-type: limit both trails
+                // For S-type: limit all trails based on numberOfPhotons
+                // Limit trail 1 (photon 1 left)
                 if (trailPoints.length > maxTrailPoints) {
                     const removeCount = trailPoints.length - maxTrailPoints;
                     trailPoints.splice(0, removeCount);
@@ -3509,6 +5543,7 @@ function init() {
                     trailToroidalAngles.splice(0, removeCount);
                     trailChanged = true;
                 }
+                // Limit trail 2 (photon 1 right)
                 if (trailPoints2.length > maxTrailPoints) {
                     const removeCount = trailPoints2.length - maxTrailPoints;
                     trailPoints2.splice(0, removeCount);
@@ -3518,8 +5553,48 @@ function init() {
                     trailToroidalAngles2.splice(0, removeCount);
                     trailChanged2 = true;
                 }
+                // Limit trail 3 (photon 2 left) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2 && trailPoints3.length > maxTrailPoints) {
+                    const removeCount = trailPoints3.length - maxTrailPoints;
+                    trailPoints3.splice(0, removeCount);
+                    trailColorIndices3.splice(0, removeCount);
+                    trailObstructionFlags3.splice(0, removeCount);
+                    trailOriginalIndices3.splice(0, removeCount);
+                    trailToroidalAngles3.splice(0, removeCount);
+                    trailChanged3 = true;
+                }
+                // Limit trail 5 (photon 2 right) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2 && trailPoints5.length > maxTrailPoints) {
+                    const removeCount = trailPoints5.length - maxTrailPoints;
+                    trailPoints5.splice(0, removeCount);
+                    trailColorIndices5.splice(0, removeCount);
+                    trailObstructionFlags5.splice(0, removeCount);
+                    trailOriginalIndices5.splice(0, removeCount);
+                    trailToroidalAngles5.splice(0, removeCount);
+                    trailChanged3 = true;
+                }
+                // Limit trail 4 (photon 3 left) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3 && trailPoints4.length > maxTrailPoints) {
+                    const removeCount = trailPoints4.length - maxTrailPoints;
+                    trailPoints4.splice(0, removeCount);
+                    trailColorIndices4.splice(0, removeCount);
+                    trailObstructionFlags4.splice(0, removeCount);
+                    trailOriginalIndices4.splice(0, removeCount);
+                    trailToroidalAngles4.splice(0, removeCount);
+                    trailChanged4 = true;
+                }
+                // Limit trail 6 (photon 3 right) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3 && trailPoints6.length > maxTrailPoints) {
+                    const removeCount = trailPoints6.length - maxTrailPoints;
+                    trailPoints6.splice(0, removeCount);
+                    trailColorIndices6.splice(0, removeCount);
+                    trailObstructionFlags6.splice(0, removeCount);
+                    trailOriginalIndices6.splice(0, removeCount);
+                    trailToroidalAngles6.splice(0, removeCount);
+                    trailChanged4 = true;
+                }
             } else {
-                // For other modes: single trail
+                // For other modes (torus and C curve): limit all trails
                 if (trailPoints.length > maxTrailPoints) {
                     const removeCount = trailPoints.length - maxTrailPoints;
                     trailPoints.splice(0, removeCount);
@@ -3528,6 +5603,24 @@ function init() {
                     trailOriginalIndices.splice(0, removeCount);
                     trailToroidalAngles.splice(0, removeCount);
                     trailChanged = true;
+                }
+                if (numberOfPhotons >= 2 && trailPoints3.length > maxTrailPoints) {
+                    const removeCount = trailPoints3.length - maxTrailPoints;
+                    trailPoints3.splice(0, removeCount);
+                    trailColorIndices3.splice(0, removeCount);
+                    trailObstructionFlags3.splice(0, removeCount);
+                    trailOriginalIndices3.splice(0, removeCount);
+                    trailToroidalAngles3.splice(0, removeCount);
+                    trailChanged3 = true;
+                }
+                if (numberOfPhotons >= 3 && trailPoints4.length > maxTrailPoints) {
+                    const removeCount = trailPoints4.length - maxTrailPoints;
+                    trailPoints4.splice(0, removeCount);
+                    trailColorIndices4.splice(0, removeCount);
+                    trailObstructionFlags4.splice(0, removeCount);
+                    trailOriginalIndices4.splice(0, removeCount);
+                    trailToroidalAngles4.splice(0, removeCount);
+                    trailChanged4 = true;
                 }
             }
             
@@ -3544,17 +5637,59 @@ function init() {
                 const angleDiff = currentToroidalAngle - trailToroidalAngles2[i];
                 trailColorIndices2[i] = getColorIndex(angleDiff, gradientCycleLength);
             }
+            // Update color indices for additional trails
+            if (pathMode === 'lemniscate-s') {
+                // For S-type: update color indices for all trails based on numberOfPhotons
+                // Trail 3 (photon 2 left) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2) {
+                    for (let i = 0; i < trailPoints3.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles3[i];
+                        trailColorIndices3[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                    // Trail 5 (photon 2 right)
+                    for (let i = 0; i < trailPoints5.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles5[i];
+                        trailColorIndices5[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                }
+                // Trail 4 (photon 3 left) and Trail 6 (photon 3 right) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3) {
+                    for (let i = 0; i < trailPoints4.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles4[i];
+                        trailColorIndices4[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                    for (let i = 0; i < trailPoints6.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles6[i];
+                        trailColorIndices6[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                }
+            } else {
+                // For torus/C curve: update color indices for trails 3 and 4
+                if (numberOfPhotons >= 2) {
+                    for (let i = 0; i < trailPoints3.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles3[i];
+                        trailColorIndices3[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                }
+                if (numberOfPhotons >= 3) {
+                    for (let i = 0; i < trailPoints4.length; i++) {
+                        const angleDiff = currentToroidalAngle - trailToroidalAngles4[i];
+                        trailColorIndices4[i] = getColorIndex(angleDiff, gradientCycleLength);
+                    }
+                }
+            }
             
             // Only update trail geometry
             if (pathMode === 'lemniscate-s') {
-                // For S-type: update both trails
+                // For S-type: update all trails based on numberOfPhotons
                 const shouldUpdateTrail = trailChanged || (Math.floor(animationTime * 60) % 3 === 0);
                 const shouldUpdateTrail2 = trailChanged2 || (Math.floor(animationTime * 60) % 3 === 0);
+                const shouldUpdateTrail3 = trailChanged3 || (Math.floor(animationTime * 60) % 3 === 0);
+                const shouldUpdateTrail4 = trailChanged4 || (Math.floor(animationTime * 60) % 3 === 0);
                 
-                // Update first trail (left spheroid)
+                // Update trail 1 (photon 1 left)
                 if (trailPoints.length > 1 && shouldUpdateTrail) {
-                    // Update obstruction flags if needed (throttled)
-                    if (transparency === 0 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
+                    if (opacity === 1 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
                         const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300));
                         for (let i = 0; i < trailPoints.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints.length - 1) {
@@ -3562,16 +5697,14 @@ function init() {
                             }
                         }
                     }
-                    
                     updateTrailGeometry(trailPoints, trailColorIndices, trailObstructionFlags);
                 } else if (trailPoints.length <= 1) {
                     updateTrailGeometry([], [], []);
                 }
                 
-                // Update second trail (right spheroid)
+                // Update trail 2 (photon 1 right)
                 if (trailPoints2.length > 1 && shouldUpdateTrail2) {
-                    // Update obstruction flags if needed (throttled)
-                    if (transparency === 0 && (trailChanged2 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                    if (opacity === 1 && (trailChanged2 || (Math.floor(animationTime * 60) % 6 === 0))) {
                         const checkInterval = Math.max(1, Math.floor(trailPoints2.length / 300));
                         for (let i = 0; i < trailPoints2.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints2.length - 1) {
@@ -3579,18 +5712,83 @@ function init() {
                             }
                         }
                     }
-                    
                     updateTrailGeometry2(trailPoints2, trailColorIndices2, trailObstructionFlags2);
                 } else if (trailPoints2.length <= 1) {
                     updateTrailGeometry2([], [], []);
                 }
-            } else {
-                // For other modes: single trail
-                const shouldUpdateTrail = trailChanged || (Math.floor(animationTime * 60) % 3 === 0);
                 
+                // Update trail 3 (photon 2 left) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2) {
+                    if (trailPoints3.length > 1 && shouldUpdateTrail3) {
+                        if (opacity === 1 && (trailChanged3 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints3.length / 300));
+                            for (let i = 0; i < trailPoints3.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints3.length - 1) {
+                                    trailObstructionFlags3[i] = isPhotonObstructed(trailPoints3[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry3(trailPoints3, trailColorIndices3, trailObstructionFlags3);
+                    } else if (trailPoints3.length <= 1) {
+                        updateTrailGeometry3([], [], []);
+                    }
+                    
+                    // Update trail 5 (photon 2 right)
+                    if (trailPoints5.length > 1 && shouldUpdateTrail3) {
+                        if (opacity === 1 && (trailChanged3 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints5.length / 300));
+                            for (let i = 0; i < trailPoints5.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints5.length - 1) {
+                                    trailObstructionFlags5[i] = isPhotonObstructed(trailPoints5[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry5(trailPoints5, trailColorIndices5, trailObstructionFlags5);
+                    } else if (trailPoints5.length <= 1) {
+                        updateTrailGeometry5([], [], []);
+                    }
+                }
+                
+                // Update trail 4 (photon 3 left) and trail 6 (photon 3 right) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3) {
+                    if (trailPoints4.length > 1 && shouldUpdateTrail4) {
+                        if (opacity === 1 && (trailChanged4 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints4.length / 300));
+                            for (let i = 0; i < trailPoints4.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints4.length - 1) {
+                                    trailObstructionFlags4[i] = isPhotonObstructed(trailPoints4[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry4(trailPoints4, trailColorIndices4, trailObstructionFlags4);
+                    } else if (trailPoints4.length <= 1) {
+                        updateTrailGeometry4([], [], []);
+                    }
+                    
+                    // Update trail 6 (photon 3 right)
+                    if (trailPoints6.length > 1 && shouldUpdateTrail4) {
+                        if (opacity === 1 && (trailChanged4 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints6.length / 300));
+                            for (let i = 0; i < trailPoints6.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints6.length - 1) {
+                                    trailObstructionFlags6[i] = isPhotonObstructed(trailPoints6[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry6(trailPoints6, trailColorIndices6, trailObstructionFlags6);
+                    } else if (trailPoints6.length <= 1) {
+                        updateTrailGeometry6([], [], []);
+                    }
+                }
+            } else {
+                // For other modes (torus and C curve): update all trails based on numberOfPhotons
+                const shouldUpdateTrail = trailChanged || (Math.floor(animationTime * 60) % 3 === 0);
+                const shouldUpdateTrail3 = trailChanged3 || (Math.floor(animationTime * 60) % 3 === 0);
+                const shouldUpdateTrail4 = trailChanged4 || (Math.floor(animationTime * 60) % 3 === 0);
+                
+                // Update trail 1
                 if (trailPoints.length > 1 && shouldUpdateTrail) {
-                    // Update obstruction flags if needed (throttled)
-                    if (transparency === 0 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
+                    if (opacity === 1 && (trailChanged || (Math.floor(animationTime * 60) % 6 === 0))) {
                         const checkInterval = Math.max(1, Math.floor(trailPoints.length / 300));
                         for (let i = 0; i < trailPoints.length; i++) {
                             if (i % checkInterval === 0 || i === trailPoints.length - 1) {
@@ -3598,10 +5796,43 @@ function init() {
                             }
                         }
                     }
-                    
                     updateTrailGeometry(trailPoints, trailColorIndices, trailObstructionFlags);
                 } else if (trailPoints.length <= 1) {
                     updateTrailGeometry([], [], []);
+                }
+                
+                // Update trail 3 (photon 2) if numberOfPhotons >= 2
+                if (numberOfPhotons >= 2) {
+                    if (trailPoints3.length > 1 && shouldUpdateTrail3) {
+                        if (opacity === 1 && (trailChanged3 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints3.length / 300));
+                            for (let i = 0; i < trailPoints3.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints3.length - 1) {
+                                    trailObstructionFlags3[i] = isPhotonObstructed(trailPoints3[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry3(trailPoints3, trailColorIndices3, trailObstructionFlags3);
+                    } else if (trailPoints3.length <= 1) {
+                        updateTrailGeometry3([], [], []);
+                    }
+                }
+                
+                // Update trail 4 (photon 3) if numberOfPhotons >= 3
+                if (numberOfPhotons >= 3) {
+                    if (trailPoints4.length > 1 && shouldUpdateTrail4) {
+                        if (opacity === 1 && (trailChanged4 || (Math.floor(animationTime * 60) % 6 === 0))) {
+                            const checkInterval = Math.max(1, Math.floor(trailPoints4.length / 300));
+                            for (let i = 0; i < trailPoints4.length; i++) {
+                                if (i % checkInterval === 0 || i === trailPoints4.length - 1) {
+                                    trailObstructionFlags4[i] = isPhotonObstructed(trailPoints4[i]);
+                                }
+                            }
+                        }
+                        updateTrailGeometry4(trailPoints4, trailColorIndices4, trailObstructionFlags4);
+                    } else if (trailPoints4.length <= 1) {
+                        updateTrailGeometry4([], [], []);
+                    }
                 }
             }
             

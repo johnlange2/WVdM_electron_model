@@ -1,6 +1,6 @@
 # Williamson Van der Mark Electron/Positron Model Visualization
 
-An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/positron model, showing a photon moving along either a torus (donut) or a lemniscate (figure-8) path. The model demonstrates how electrons and positrons can be visualized as photons moving along these geometric paths.
+An interactive 3D visualization of an internal momentum space track inspired by the Williamson Van der Mark (WVdM) electron/positron model. This app visualizes photons moving along either a torus (donut) or a lemniscate (figure-8) path in momentum space, not in physical position space. The torus and lemniscates are drawn in abstract 3D space that can be thought of as momenta (p_x, p_y, p_z). The E/B and spin-like vectors are toy geometric quantities attached to the tracks for intuition, not literal fields in real space.
 
 ## Features
 
@@ -8,12 +8,18 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
   - **Torus (Donut)**: Original WVdM style helix on a torus surface
   - **Viviani Lemniscate 'C' curve**: Single spheroid with figure-8 path
   - **Viviani Lemniscate 'S' curve**: Two side-by-side spheroids with alternating left/right tracks
-- **Semi-transparent torus**: Adjustable transparency (0 = solid, 1 = invisible) with optional wireframe display (torus mode only)
+- **Semi-transparent torus/spheroids**: Adjustable opacity (0 = clear, 1 = solid) with optional wireframe display (torus mode only)
 - **Parameterized dimensions**: Control inner and outer radius independently (relative units)
 - **Photon animation**: Visual representation of the photon moving along the selected path
 - **Photon Speed control**: Logarithmic scale from 0.1 to 10 (default 1.0)
 - **Trail visualization**: Configurable trail length in toroidal rotations (0.1 to unlimited)
-- **Track color gradient**: The photon's track displays a temperature-like color gradient from white (newest) through light yellow, yellow, bright red, red, to dark red (oldest). The gradient direction is determined by particle type (electron vs positron), not spin direction.
+- **Track color gradient**: 
+  - **Single photon (Number of Photons = 1)**: Temperature-like color gradient from white (newest) through light yellow, yellow, bright red, red, to dark red (oldest)
+  - **Multiple photons (Number of Photons = 2 or 3)**: Distinct color gradients for each photon:
+    - Photon 1: Magenta gradient (bright magenta → dark magenta)
+    - Photon 2: Yellow/green gradient (bright yellow/green → dark green)
+    - Photon 3: Cyan gradient (bright cyan → dark cyan)
+  - The gradient direction is determined by particle type (electron vs positron), not spin direction
 - **Precession effect**: Spirograph-like precession pattern for both C and S curves:
   - **C curve**: Rotating E/M fields create spirograph patterns
   - **S curve**: Both left and right loops rotate independently, creating interleaved patterns
@@ -22,6 +28,23 @@ An interactive 3D visualization of the Williamson Van der Mark (WVdM) electron/p
 - **Particle type selection**: Switch between Electron and Positron (affects electric field direction)
 - **Winding ratio modes**: Choose between 1:2 (4π toroidal, 2π poloidal) and 2:1 (2π toroidal, 4π poloidal) winding (torus mode only; figure-8 mode uses 4π path equivalent to 2:1)
 - **Spin direction**: Spin Up or Spin Down (controls poloidal chirality/circular polarization only, not toroidal motion direction)
+- **Number of Photons**: Display 1, 2, or 3 photons with different orientations:
+  - **Number of Photons = 1**: Default single photon display (red for unobstructed, dark red for obstructed)
+  - **Number of Photons = 2**: Adds a second photon in a different orientation:
+    - **Torus mode**: Second torus with X as primary axis
+    - **C curve mode**: Second spheroid with X as major axis
+    - **S curve mode**: Second pair of spheroids along Y with X as major axis
+    - Photon 1: Magenta (unobstructed) / Dark magenta (obstructed)
+    - Photon 2: Yellow/green (unobstructed) / Dark yellow/green (obstructed)
+  - **Number of Photons = 3**: Adds a third photon in yet another orientation:
+    - **Torus mode**: Third torus with Y as primary axis
+    - **C curve mode**: Third spheroid with Z as major axis
+    - **S curve mode**: Third pair of spheroids along Y with Z as major axis
+    - Photon 1: Magenta (unobstructed) / Dark magenta (obstructed)
+    - Photon 2: Yellow/green (unobstructed) / Dark yellow/green (obstructed)
+    - Photon 3: Cyan (unobstructed) / Dark cyan (obstructed)
+  - E/M and momentum values are vector-added across all active photons
+  - Track colors use distinct gradients for each photon (magenta, yellow/green, cyan) when multiple photons are active
 - **Interactive camera**: Real-time 3D perspective adjustment with mouse controls
 - **Field vectors**: Visual display of Electric (green) and Magnetic (blue) field vectors at the photon position
 - **Field vectors display**: Shows instantaneous and average (per cycle) electric and magnetic field vectors with reset capability
@@ -75,7 +98,21 @@ Then open `http://localhost:8000` in your browser.
   - **1:2** (default): 4π toroidal, 2π poloidal (clears track when changed)
   - **2:1**: 2π toroidal, 4π poloidal (clears track when changed)
 - **Spin Direction**: Spin Up or Spin Down (controls poloidal chirality - the direction of motion around the minor circle/circular polarization). Does not affect toroidal motion direction (controlled by particle type) or electric field direction (controlled by particle type). Clears track when changed.
-- **Transparency**: Adjust the opacity of the torus (0 = solid, 1 = invisible)
+- **Number of Photons**: Select 1, 2, or 3 photons to display in different orientations:
+  - **1** (default): Single photon display with original behavior
+  - **2**: Adds a second photon in a different orientation:
+    - **Torus mode**: Second torus with X as primary axis (centered at origin)
+    - **C curve mode**: Second spheroid with X as major axis (centered at origin)
+    - **S curve mode**: Second pair of spheroids along Y axis with X as major axis (touching at origin)
+  - **3**: Adds a third photon in yet another orientation:
+    - **Torus mode**: Third torus with Y as primary axis (centered at origin)
+    - **C curve mode**: Third spheroid with Z as major axis (centered at origin)
+    - **S curve mode**: Third pair of spheroids along Y axis with Z as major axis (touching at origin)
+  - All photons, tracks, and E/M vectors stay synchronized
+  - E/M and momentum values are vector-added across all active photons
+  - Track colors use distinct gradients: red (photon 1), magenta/yellow-green/cyan gradients for multiple photons
+  - Changing Number of Photons clears all tracks
+- **Opacity**: Adjust the opacity of the torus/spheroids (0 = clear, 1 = solid)
 - **Show Wireframe**: Toggle wireframe mesh visibility
 - **Inner Radius (relative)** / **Minor Axis (relative)**: 
   - **Torus mode**: Control the inner radius (can be 0 or negative for inverted shapes)
@@ -177,7 +214,11 @@ The momentum vectors are calculated differently depending on the path mode:
 
 ## Model Description
 
-The Williamson Van der Mark electron model proposes that electrons and positrons can be visualized as photons moving in closed paths around a torus. This visualization demonstrates:
+**Important Note on Momentum Space vs. Configuration Space:**
+
+This visualization represents momentum space, not physical position space. The torus and lemniscates are drawn in abstract 3D space representing momenta (p_x, p_y, p_z), not the literal movement of a "bead-like" photon in real physical position (x, y, z) space. The E/B and spin-like vectors are toy geometric quantities attached to the tracks for intuition, not literal fields in real space.
+
+The Williamson Van der Mark electron model proposes that electrons and positrons can be visualized as photons moving in closed paths around a torus in momentum space. This visualization demonstrates:
 
 1. The toroidal or lemniscate structure of the particle's path
 2. The continuous motion of the photon
@@ -189,7 +230,7 @@ The Williamson Van der Mark electron model proposes that electrons and positrons
 8. Alternative figure-8 geometries (C and S curves) that may provide insights into electron/positron substructure
 9. S curve with two side-by-side spheroids and alternating track visibility
 
-Note: The "photon speed" parameter in this visualization controls the animation rate for better visualization, not the actual speed of light. In the physical model, the photon would be moving at the speed of light (c).
+Note: The "photon speed" parameter in this visualization controls the animation rate for better visualization, not the actual speed of light. Since this is a momentum space visualization, the speed parameter controls how fast the photon moves along its momentum space trajectory, not its physical velocity in configuration space.
 
 ## Browser Compatibility
 

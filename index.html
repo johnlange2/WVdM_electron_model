@@ -339,9 +339,18 @@
             </div>
             
             <div class="control-group">
-                <label>Transparency (0 = solid, 1 = clear)</label>
-                <input type="range" id="transparency" min="0" max="1" step="0.01" value="0.5">
-                <span class="value-display" id="transparency-value">0.50</span>
+                <label>Number of Photons</label>
+                <select id="numberOfPhotons" style="width: 100%; padding: 5px; background: rgba(49, 50, 68, 0.8); border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; font-size: 0.9em;">
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Opacity (0 = clear, 1 = solid)</label>
+                <input type="range" id="opacity" min="0" max="1" step="0.01" value="0.5">
+                <span class="value-display" id="opacity-value">0.50</span>
             </div>
             
             <div class="control-group">
@@ -417,7 +426,8 @@
             
             <div style="line-height: 1.6;">
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Overview</h3>
-                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along closed paths. The model supports three path geometries: the original WVdM torus (donut), and two extensions using lemniscate (figure-8) curves based on Viviani's curve. The model shows how a photon's trajectory can give rise to particle-like properties.</p>
+                <p><strong>Important:</strong> This app is a 3D visualization of an internal momentum space track inspired by WVdM. The torus and lemniscates are drawn in abstract 3D space that can be thought of as momenta (p_x, p_y, p_z). The E/B and spin-like vectors are toy geometric quantities attached to the tracks for intuition, not literal fields in real space. This is <em>not</em> the literal movement of a "bead-like" photon moving in real physical position (x, y, z) space (a.k.a. configuration space).</p>
+                <p>This visualization demonstrates the Williamson Van der Mark (WVdM) model, which describes electrons and positrons as photons moving along closed paths in momentum space. The model supports three path geometries: the original WVdM torus (donut), and two extensions using lemniscate (figure-8) curves based on Viviani's curve. The model shows how a photon's trajectory in momentum space can give rise to particle-like properties.</p>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Controls</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
@@ -444,7 +454,29 @@
                     <li><strong>Particle Type:</strong> Select between Electron and Positron (affects electric field direction)</li>
                     <li><strong>Winding Ratio:</strong> (Torus mode only) Select between 1:2 (default) and 2:1 winding modes (different toroidal/poloidal path ratios). Changing winding ratio clears the track.</li>
                     <li><strong>Spin Direction:</strong> Select Spin Up or Spin Down. Controls poloidal chirality (the direction of motion around the minor circle/circular polarization). Does not affect toroidal motion direction (controlled by particle type) or electric field direction (controlled by particle type). Changing spin direction clears the track.</li>
-                    <li><strong>Transparency:</strong> Controls the opacity of the torus/spheroids (0 = solid, 1 = invisible). Wireframe option available in torus mode only.</li>
+                    <li><strong>Number of Photons:</strong> Select 1, 2, or 3 photons to display in different orientations:
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>1</strong> (default): Single photon display with original behavior (red for unobstructed, dark red for obstructed)</li>
+                            <li><strong>2</strong>: Adds a second photon in a different orientation:
+                                <ul style="margin-left: 20px; margin-top: 5px;">
+                                    <li><strong>Torus mode:</strong> Second torus with X as primary axis (centered at origin)</li>
+                                    <li><strong>C curve mode:</strong> Second spheroid with X as major axis (centered at origin)</li>
+                                    <li><strong>S curve mode:</strong> Second pair of spheroids along Y axis with X as major axis (touching at origin)</li>
+                                </ul>
+                                Photon 1: Magenta (unobstructed) / Dark magenta (obstructed)<br>
+                                Photon 2: Yellow/green (unobstructed) / Dark yellow/green (obstructed)</li>
+                            <li><strong>3</strong>: Adds a third photon in yet another orientation:
+                                <ul style="margin-left: 20px; margin-top: 5px;">
+                                    <li><strong>Torus mode:</strong> Third torus with Y as primary axis (centered at origin)</li>
+                                    <li><strong>C curve mode:</strong> Third spheroid with Z as major axis (centered at origin)</li>
+                                    <li><strong>S curve mode:</strong> Third pair of spheroids along Y axis with Z as major axis (touching at origin)</li>
+                                </ul>
+                                Photon 1: Magenta (unobstructed) / Dark magenta (obstructed)<br>
+                                Photon 2: Yellow/green (unobstructed) / Dark yellow/green (obstructed)<br>
+                                Photon 3: Cyan (unobstructed) / Dark cyan (obstructed)</li>
+                        </ul>
+                        All photons, tracks, and E/M vectors stay synchronized. E/M and momentum values are vector-added across all active photons. Track colors use distinct gradients for each photon (magenta, yellow/green, cyan) when multiple photons are active. Changing Number of Photons clears all tracks.</li>
+                    <li><strong>Opacity:</strong> Controls the opacity of the torus/spheroids (0 = clear, 1 = solid). Wireframe option available in torus mode only.</li>
                     <li><strong>Show Wireframe:</strong> Toggles the wireframe mesh visibility (torus mode only)</li>
                     <li><strong>Inner Radius (relative)</strong> / <strong>Minor Axis (relative):</strong> 
                         <ul style="margin-left: 20px; margin-top: 5px;">
@@ -474,20 +506,38 @@
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Visualization Elements</h3>
                 <ul style="margin-left: 20px; margin-bottom: 15px;">
-                    <li><strong>Red/Blue Photon:</strong> The photon particle (red when visible, blue when behind geometry in torus mode)</li>
+                    <li><strong>Photon:</strong> The photon particle(s):
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Number of Photons = 1:</strong> Red when visible, dark red when obstructed (behind geometry in torus mode)</li>
+                            <li><strong>Number of Photons = 2:</strong> Photon 1 (magenta), Photon 2 (yellow/green)</li>
+                            <li><strong>Number of Photons = 3:</strong> Photon 1 (magenta), Photon 2 (yellow/green), Photon 3 (cyan)</li>
+                        </ul>
+                    </li>
                     <li><strong>Green Arrow:</strong> Electric field vector
                         <ul style="margin-left: 20px; margin-top: 5px;">
                             <li><strong>Torus/C curve:</strong> Points radially (inward for electrons, outward for positrons)</li>
                             <li><strong>S curve:</strong> Points inward toward the current spheroid's center (left or right)</li>
+                            <li>When multiple photons are active, E/M vectors are shown for each photon and values are vector-added</li>
                         </ul>
                     </li>
-                    <li><strong>Blue Arrow:</strong> Magnetic field vector (perpendicular to motion and electric field, forming a right-handed triad)</li>
+                    <li><strong>Blue Arrow:</strong> Magnetic field vector (perpendicular to motion and electric field, forming a right-handed triad). When multiple photons are active, vectors are shown for each photon.</li>
                     <li><strong>Track:</strong> The photon's path
                         <ul style="margin-left: 20px; margin-top: 5px;">
-                            <li><strong>Torus/C curve:</strong> Single continuous track</li>
-                            <li><strong>S curve:</strong> Two alternating tracks (left visible when u ∈ [2π, 4π], right visible when u ∈ [0, 2π])</li>
+                            <li><strong>Torus/C curve:</strong> Single continuous track per photon</li>
+                            <li><strong>S curve:</strong> Two alternating tracks per photon (left visible when u ∈ [2π, 4π], right visible when u ∈ [0, 2π])</li>
                         </ul>
-                        Displays a temperature-like color gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest). The gradient spans one full cycle of the path. Gradient direction is determined by particle type (electron vs positron), not spin direction. Shown in brighter color when unobstructed, darker when behind geometry (torus mode).</li>
+                        Color gradients:
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><strong>Number of Photons = 1:</strong> Temperature-like gradient: white (newest) → light yellow → yellow → bright red → red → dark red (oldest)</li>
+                            <li><strong>Number of Photons = 2 or 3:</strong> Distinct gradients for each photon:
+                                <ul style="margin-left: 20px; margin-top: 5px;">
+                                    <li>Photon 1: Bright magenta → dark magenta</li>
+                                    <li>Photon 2: Bright yellow/green → dark green</li>
+                                    <li>Photon 3: Bright cyan → dark cyan</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        The gradient spans one full cycle of the path. Gradient direction is determined by particle type (electron vs positron), not spin direction. Shown in brighter color when unobstructed, darker when behind geometry (torus mode).</li>
                 </ul>
                 
                 <h3 style="color: #a6adc8; margin-top: 20px; margin-bottom: 10px;">Field and Momentum Displays</h3>
